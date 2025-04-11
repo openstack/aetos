@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = aetos
+
+[report]
+ignore_errors = True

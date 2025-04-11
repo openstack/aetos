@@ -1,7 +1,8 @@
 - project:
-    check:
-      jobs:
-        - noop
-    gate:
-      jobs:
-        - noop
+    queue: telemetry
+    templates:
+      - openstack-python3-jobs
+      # TODO(tkajinm): Enable these once ready
+      #- publish-openstack-docs-pti
+      #- release-notes-jobs-python3
+      - check-requirements
