@@ -1,0 +1,13 @@
+# Aetos service
+enable_service aetos
+
+# Default directories
+AETOS_DIR=$DEST/aetos
+AETOS_CONF_DIR=/etc/aetos
+AETOS_CONF=$AETOS_CONF_DIR/aetos.conf
+AETOS_UWSGI_CONF=$AETOS_CONF_DIR/aetos-uwsgi.ini
+AETOS_UWSGI=aetos.wsgi.api:application
+
+# Aetos connection info.
+AETOS_SERVICE_PROTOCOL=http
+AETOS_SERVICE_HOST=${AETOS_SERVICE_HOST:-$SERVICE_HOST}
