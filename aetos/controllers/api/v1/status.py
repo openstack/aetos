@@ -14,6 +14,7 @@
 # under the License.
 
 from oslo_log import log
+import pecan
 from wsme.exc import ClientSideError
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
@@ -27,6 +28,7 @@ class StatusController(base.Base):
     @wsme_pecan.wsexpose(wtypes.text, wtypes.text)
     def get(self, arg):
         """Status endpoint"""
+        self.create_prometheus_client(pecan.request.cfg)
         if arg == "runtimeinfo":
             result = self.prometheus_client._get("status/runtimeinfo")
             LOG.debug("Data received from prometheus: %s", str(result))

@@ -33,15 +33,12 @@ OPTS = [
     # TODO(jwysogla): TLS Prometheus options
 ]
 
-CONF = cfg.CONF
-CONF.register_opts(OPTS)
-
 
 class Base(rest.RestController):
-    def __init__(self):
+    def create_prometheus_client(self, conf):
         # TODO(jwysogla): Handle TLS
-        prometheus_host = netutils.escape_ipv6(CONF.prometheus_host)
-        prometheus_port = CONF.prometheus_port
+        prometheus_host = netutils.escape_ipv6(conf.prometheus_host)
+        prometheus_port = conf.prometheus_port
         url = f"{prometheus_host}:{prometheus_port}"
         self.prometheus_client = prometheus_client.PrometheusAPIClient(url)
         super(object, self).__init__()

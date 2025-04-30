@@ -15,7 +15,6 @@
 
 from oslo_log import log
 import pecan
-from wsme.exc import ClientSideError
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -24,18 +23,14 @@ from aetos.controllers.api.v1 import base
 LOG = log.getLogger(__name__)
 
 
-class LabelController(base.Base):
-    @wsme_pecan.wsexpose(wtypes.text, wtypes.text, wtypes.text)
-    def get(self, name, values):
-        """Label endpoint"""
-        # TODO(jwysogla):
-        # - policy handling
-        # - query modification
-        # - handle non successful http statusses
+class SnapshotController(base.Base):
+    @wsme_pecan.wsexpose(wtypes.text)
+    def post(self):
+        """Snapshot endpoint"""
+        # TODO(jwysogla)
+        # - check policies. This should be accessible to admin only.
+        # - handle unsuccessful requests
         self.create_prometheus_client(pecan.request.cfg)
-        LOG.debug("Label name: %s", name)
-        if values != "values":
-            raise ClientSideError("page not found", 404)
-        result = self.prometheus_client._get(f"label/{name}/values")
+        result = self.prometheus_client._post("admin/tsdb/snapshot")
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

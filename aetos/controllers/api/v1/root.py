@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from aetos.controllers.api.v1.admin import root as admin_root
 from aetos.controllers.api.v1 import label
 from aetos.controllers.api.v1 import labels
 from aetos.controllers.api.v1 import query
@@ -30,3 +31,4 @@ class V1Controller:
     label = label.LabelController()
     targets = targets.TargetsController()
     status = status.StatusController()
+    admin = admin_root.AdminController()
