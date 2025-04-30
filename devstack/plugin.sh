@@ -52,15 +52,6 @@ function configure_aetos {
     # Format logging
     setup_logging $AETOS_CONF DEFAULT
 
-    iniset $AETOS_CONF service_credentials auth_type password
-    iniset $AETOS_CONF service_credentials username aetos
-    iniset $AETOS_CONF service_credentials user_domain_id default
-    iniset $AETOS_CONF service_credentials project_domain_id default
-    iniset $AETOS_CONF service_credentials password $SERVICE_PASSWORD
-    iniset $AETOS_CONF service_credentials project_name $SERVICE_PROJECT_NAME
-    iniset $AETOS_CONF service_credentials region_name $REGION_NAME
-    iniset $AETOS_CONF service_credentials auth_url $KEYSTONE_SERVICE_URI
-
     configure_keystone_authtoken_middleware $AETOS_CONF aetos
 
     # iniset creates these files when it's called if they don't exist.

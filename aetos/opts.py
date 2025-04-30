@@ -15,11 +15,9 @@
 # under the License.
 import itertools
 
-from keystoneauth1 import loading
 from oslo_config import cfg
 
 import aetos.controllers.api.v1.base
-import aetos.keystone_client
 import aetos.service
 
 
@@ -40,14 +38,4 @@ def list_opts():
         ('DEFAULT',
          itertools.chain(OPTS,
                          aetos.controllers.api.v1.base.OPTS)),
-        ('service_credentials', aetos.keystone_client.OPTS),
     ]
-
-
-def list_keystoneauth_opts():
-    # NOTE(sileht): the configuration file contains only the options
-    # for the password plugin that handles keystone v2 and v3 API
-    # with discovery. But other options are possible.
-    return [('service_credentials', (
-            loading.get_auth_common_conf_options() +
-            loading.get_auth_plugin_conf_options('password')))]

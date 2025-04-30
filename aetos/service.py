@@ -15,7 +15,6 @@
 # under the License.
 import os
 
-from keystoneauth1 import loading as ka_loading
 from oslo_config import cfg
 from oslo_db import options as db_options
 import oslo_i18n
@@ -23,7 +22,6 @@ from oslo_log import log
 from oslo_policy import opts as policy_opts
 
 from aetos.conf import defaults
-from aetos import keystone_client
 from aetos import version
 
 
@@ -31,16 +29,6 @@ def prepare_service(argv=None, config_files=None):
     conf = cfg.ConfigOpts()
     oslo_i18n.enable_lazy()
     log.register_options(conf)
-    log_levels = (
-        conf.default_log_levels +
-        [
-            'futurist=INFO',
-            'keystoneclient=INFO',
-            'oslo_db.sqlalchemy=WARN',
-            'cotyledon=INFO'
-        ]
-    )
-    log.set_defaults(default_log_levels=log_levels)
     defaults.set_cors_middleware_defaults()
     db_options.set_defaults(conf)
     policy_opts.set_defaults(conf, policy_file=os.path.abspath(
@@ -50,13 +38,11 @@ def prepare_service(argv=None, config_files=None):
     for group, options in opts.list_opts():
         conf.register_opts(list(options),
                            group=None if group == "DEFAULT" else group)
-    keystone_client.register_keystoneauth_opts(conf)
 
     conf(argv, project='aetos', validate_default_values=True,
          default_config_files=config_files,
          version=version.version_info.version_string())
 
-    ka_loading.load_auth_from_conf_options(conf, "service_credentials")
     log.setup(conf, 'aetos')
 
     return conf
