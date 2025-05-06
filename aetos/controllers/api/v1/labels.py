@@ -14,6 +14,7 @@
 # under the License.
 
 from oslo_log import log
+import pecan
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -30,6 +31,7 @@ class LabelsController(base.Base):
         # we need to do restrictions here. If it turns out we need to
         # enforce tenancy, we should be able to use the match[]
         # query parameter of the endpoint.
+        self.create_prometheus_client(pecan.request.cfg)
         result = self.prometheus_client._get("labels")
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

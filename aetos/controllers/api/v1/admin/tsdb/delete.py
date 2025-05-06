@@ -15,27 +15,26 @@
 
 from oslo_log import log
 import pecan
-from wsme.exc import ClientSideError
-from wsme import types as wtypes
-import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
 
 LOG = log.getLogger(__name__)
 
 
-class LabelController(base.Base):
-    @wsme_pecan.wsexpose(wtypes.text, wtypes.text, wtypes.text)
-    def get(self, name, values):
-        """Label endpoint"""
+class DeleteController(base.Base):
+    # NOTE(jwysogla): the delete/ endpoint expects a `match[]` argument,
+    # which is making the use of wsexpose difficult, so a plain
+    # pecan.expose is used instead, with handling of the arguments
+    # as a dictionary inside the function.
+    @pecan.expose(content_type='application/json')
+    def post(self, **args):
+        """Delete endpoint"""
         # TODO(jwysogla):
         # - policy handling
-        # - query modification
-        # - handle non successful http statusses
+        # - handle unknown, missing and optional parameters
+        # - handle unsuccessful calls to prometheus
         self.create_prometheus_client(pecan.request.cfg)
-        LOG.debug("Label name: %s", name)
-        if values != "values":
-            raise ClientSideError("page not found", 404)
-        result = self.prometheus_client._get(f"label/{name}/values")
-        LOG.debug("Data received from prometheus: %s", str(result))
-        return result
+        matches = args.get('match[]', [])
+        start = args.get('start', None)
+        end = args.get('end', None)
+        self.prometheus_client.delete(matches, start, end)

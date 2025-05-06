@@ -35,6 +35,7 @@ class SeriesController(base.Base):
         # - policy handling
         # - match modification
         # - handle unknown parameters
+        self.create_prometheus_client(pecan.request.cfg)
         matches = args['match[]']
         modified_matches = matches
 

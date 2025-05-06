@@ -14,6 +14,7 @@
 # under the License.
 
 from oslo_log import log
+import pecan
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
@@ -29,6 +30,7 @@ class QueryController(base.Base):
         # TODO(jwysogla):
         # - policy handling
         # - query modification
+        self.create_prometheus_client(pecan.request.cfg)
         modified_query = query
 
         LOG.debug("Unmodified query: %s", query)
