@@ -21,14 +21,14 @@ from aetos.controllers.api.v1 import base
 LOG = log.getLogger(__name__)
 
 
-class DeleteController(base.Base):
-    # NOTE(jwysogla): the delete/ endpoint expects a `match[]` argument,
+class DeleteSeriesController(base.Base):
+    # NOTE(jwysogla): the delete_series/ endpoint expects a `match[]` argument,
     # which is making the use of wsexpose difficult, so a plain
     # pecan.expose is used instead, with handling of the arguments
     # as a dictionary inside the function.
     @pecan.expose(content_type='application/json')
     def post(self, **args):
-        """Delete endpoint"""
+        """Delete_series endpoint"""
         # TODO(jwysogla):
         # - policy handling
         # - handle unknown, missing and optional parameters

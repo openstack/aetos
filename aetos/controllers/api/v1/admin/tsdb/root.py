@@ -14,7 +14,7 @@
 # under the License.
 
 from aetos.controllers.api.v1.admin.tsdb import clean_tombstones
-from aetos.controllers.api.v1.admin.tsdb import delete
+from aetos.controllers.api.v1.admin.tsdb import delete_series
 from aetos.controllers.api.v1.admin.tsdb import snapshot
 
 
@@ -22,5 +22,5 @@ class TsdbController:
     """v1/admin/tsdb API controller root."""
 
     clean_tombstones = clean_tombstones.CleanTombstonesController()
-    delete = delete.DeleteController()
+    delete_series = delete_series.DeleteSeriesController()
     snapshot = snapshot.SnapshotController()
