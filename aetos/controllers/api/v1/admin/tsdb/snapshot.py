@@ -31,6 +31,6 @@ class SnapshotController(base.Base):
         # - check policies. This should be accessible to admin only.
         # - handle unsuccessful requests
         self.create_prometheus_client(pecan.request.cfg)
-        result = self.prometheus_client._post("admin/tsdb/snapshot")
+        result = self.prometheus_post("admin/tsdb/snapshot")
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

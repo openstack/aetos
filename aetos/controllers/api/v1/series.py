@@ -15,6 +15,7 @@
 
 import json
 import pecan
+from wsme import exc
 
 from oslo_log import log
 
@@ -36,14 +37,23 @@ class SeriesController(base.Base):
         # - match modification
         # - handle unknown parameters
         self.create_prometheus_client(pecan.request.cfg)
+        status_code = 200
+
         matches = args['match[]']
         modified_matches = matches
 
         LOG.debug("Unmodified matches received: %s", str(matches))
         LOG.debug("Matches sent to prometheus: %s", str(modified_matches))
 
-        result = self.prometheus_client._get("series",
-                                             {'match[]': modified_matches})
-
+        try:
+            result = self.prometheus_get("series",
+                                         {'match[]': modified_matches})
+        except exc.ClientSideError as e:
+            # NOTE(jwysogla): We need a special handling of the exceptions,
+            # because we don't use wsexpose as with most of other endpoints.
+            status_code = e.code
+            result = e.msg
         LOG.debug("Data received from prometheus: %s", str(result))
+
+        pecan.response.status = status_code
         return json.dumps(result)

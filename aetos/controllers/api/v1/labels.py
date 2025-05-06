@@ -32,6 +32,6 @@ class LabelsController(base.Base):
         # enforce tenancy, we should be able to use the match[]
         # query parameter of the endpoint.
         self.create_prometheus_client(pecan.request.cfg)
-        result = self.prometheus_client._get("labels")
+        result = self.prometheus_get("labels")
         LOG.debug("Data received from prometheus: %s", str(result))
         return result
