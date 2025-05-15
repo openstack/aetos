@@ -16,7 +16,6 @@
 import os
 
 from oslo_config import cfg
-from oslo_db import options as db_options
 import oslo_i18n
 from oslo_log import log
 from oslo_policy import opts as policy_opts
@@ -30,7 +29,6 @@ def prepare_service(argv=None, config_files=None):
     oslo_i18n.enable_lazy()
     log.register_options(conf)
     defaults.set_cors_middleware_defaults()
-    db_options.set_defaults(conf)
     policy_opts.set_defaults(conf, policy_file=os.path.abspath(
         os.path.join(os.path.dirname(__file__), "api", "policy.yaml")))
     from aetos import opts
