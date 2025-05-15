@@ -15,6 +15,7 @@
 
 from oslo_log import log
 import pecan
+from wsme import exc
 
 from aetos.controllers.api.v1 import base
 
@@ -37,4 +38,14 @@ class DeleteSeriesController(base.Base):
         matches = args.get('match[]', [])
         start = args.get('start', None)
         end = args.get('end', None)
-        self.prometheus_client.delete(matches, start, end)
+        try:
+            self.prometheus_post("admin/tsdb/delete_series",
+                                 {"match[]": matches,
+                                  "start": start,
+                                  "end": end})
+        except exc.ClientSideError as e:
+            # NOTE(jwysogla): We need a special handling of the exceptions,
+            # because we don't use wsexpose as with most of other endpoints.
+            pecan.response.status = e.code
+            return e.msg
+        # On success don't return anything

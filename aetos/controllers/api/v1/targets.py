@@ -31,6 +31,6 @@ class TargetsController(base.Base):
         # - policy handling
         # - query modification
         self.create_prometheus_client(pecan.request.cfg)
-        result = self.prometheus_client._get("targets", {'state': state})
+        result = self.prometheus_get("targets", {'state': state})
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

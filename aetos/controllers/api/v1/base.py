@@ -14,11 +14,11 @@
 # under the License.
 
 from pecan import rest
-
-from oslo_config import cfg
-from oslo_utils import netutils
+from wsme import exc
 
 from observabilityclient import prometheus_client
+from oslo_config import cfg
+from oslo_utils import netutils
 
 
 OPTS = [
@@ -34,6 +34,11 @@ OPTS = [
 ]
 
 
+class ServerSideError(exc.ClientSideError):
+    def __init__(self, error, status_code=500):
+        super().__init__(error, status_code, 'Server')
+
+
 class Base(rest.RestController):
     def create_prometheus_client(self, conf):
         # TODO(jwysogla): Handle TLS
@@ -42,3 +47,36 @@ class Base(rest.RestController):
         url = f"{prometheus_host}:{prometheus_port}"
         self.prometheus_client = prometheus_client.PrometheusAPIClient(url)
         super(object, self).__init__()
+
+    @staticmethod
+    def _get_correct_exception(e):
+        if e.resp.status_code // 100 == 4:
+            return exc.ClientSideError(str(e), e.resp.status_code)
+        elif e.resp.status_code // 100 == 5:
+            return ServerSideError(str(e), e.resp.status_code)
+        else:
+            return ServerSideError(
+                (f'Aetos received an unexpected status code from '
+                 f'prometheus: "{e}"'),
+                501
+            )
+
+    def prometheus_get(self, endpoint, params=None):
+        try:
+            return self.prometheus_client._get(endpoint, params)
+        except prometheus_client.PrometheusAPIClientError as e:
+            if e.resp.status_code != 204:
+                # NOTE(jwysogla): Prometheus can return empty responses, which
+                # is expected, so ignore the 204 status code and reraise on
+                # all others.
+                raise Base._get_correct_exception(e)
+
+    def prometheus_post(self, endpoint, params=None):
+        try:
+            return self.prometheus_client._post(endpoint, params)
+        except prometheus_client.PrometheusAPIClientError as e:
+            if e.resp.status_code != 204:
+                # NOTE(jwysogla): Prometheus can return empty responses, which
+                # is expected, so ignore the 204 status code and reraise on
+                # all others.
+                raise Base._get_correct_exception(e)

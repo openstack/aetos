@@ -36,6 +36,6 @@ class LabelController(base.Base):
         LOG.debug("Label name: %s", name)
         if values != "values":
             raise ClientSideError("page not found", 404)
-        result = self.prometheus_client._get(f"label/{name}/values")
+        result = self.prometheus_get(f"label/{name}/values")
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

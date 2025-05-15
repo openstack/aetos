@@ -30,4 +30,5 @@ class CleanTombstonesController(base.Base):
         # - check policies. This should be accessible to admin only.
         # - handle unsuccessful requests
         self.create_prometheus_client(pecan.request.cfg)
-        self.prometheus_client.clean_tombstones()
+        self.prometheus_post("admin/tsdb/clean_tombstones")
+        # On success don't return anything

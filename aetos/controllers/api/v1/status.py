@@ -30,7 +30,7 @@ class StatusController(base.Base):
         """Status endpoint"""
         self.create_prometheus_client(pecan.request.cfg)
         if arg == "runtimeinfo":
-            result = self.prometheus_client._get("status/runtimeinfo")
+            result = self.prometheus_get("status/runtimeinfo")
             LOG.debug("Data received from prometheus: %s", str(result))
             return result
         else:

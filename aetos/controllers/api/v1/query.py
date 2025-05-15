@@ -36,8 +36,7 @@ class QueryController(base.Base):
         LOG.debug("Unmodified query: %s", query)
         LOG.debug("Query sent to prometheus: %s", modified_query)
 
-        result = self.prometheus_client._get("query",
-                                             {"query": modified_query})
+        result = self.prometheus_get("query", {"query": modified_query})
 
         LOG.debug("Data received from prometheus: %s", str(result))
         return result
