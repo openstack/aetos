@@ -17,7 +17,7 @@ Install and configure components
 
       # apt-get update
 
-      # apt-get install
+      # apt-get install aetos-api
 
 .. include:: common_configure.rst
 
