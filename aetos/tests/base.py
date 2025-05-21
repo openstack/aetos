@@ -13,9 +13,29 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import warnings
+
 from oslotest import base
 
 
 class TestCase(base.BaseTestCase):
 
     """Test case base class for all unit tests."""
+
+    def setUp(self):
+        super().setUp()
+        # FIXME(stephenfin): Determine if we need to replace use of best_match
+        warnings.filterwarnings(
+            'ignore',
+            module='webob',
+            message='The behavior of AcceptValidHeader.best_match is ',
+            category=DeprecationWarning,
+        )
+
+        # FIXME(stephenfin): Determine if we need to replace use of best_match
+        warnings.filterwarnings(
+            'ignore',
+            module='webob',
+            message='The behavior of .best_match for the Accept classes is ',
+            category=DeprecationWarning,
+        )

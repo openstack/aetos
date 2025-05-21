@@ -17,18 +17,11 @@ test_core_endpoints
 Tests for endpoints under /api/v1
 """
 
-import pecan
 from unittest import mock
 
 from observabilityclient import prometheus_client
 
-from aetos.controllers.api.v1 import label
-from aetos.controllers.api.v1 import labels
-from aetos.controllers.api.v1 import query
-from aetos.controllers.api.v1 import series
-from aetos.controllers.api.v1 import status
-from aetos.controllers.api.v1 import targets
-from aetos.tests.unit import base
+from aetos.tests.functional import base
 
 
 class TestCoreEndpointsAsUser(base.TestCase):
@@ -73,47 +66,58 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
 
 class CoreEndpointsErrorCommonTests():
     def test_label(self):
-        ctrl = label.LabelController()
-        result = ctrl.get("name", "values")
-
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        with base.quiet_expected_exception():
+            result = self.get_json('/label/name/values',
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_labels(self):
-        ctrl = labels.LabelsController()
-        result = ctrl.get()
+        with base.quiet_expected_exception():
+            result = self.get_json('/labels',
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_query(self):
-        ctrl = query.QueryController()
-        result = ctrl.get("some_query{label='label_value'}")
+        with base.quiet_expected_exception():
+            result = self.get_json('/query', query="some_query{l='lvalue'}",
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_series(self):
-        ctrl = series.SeriesController()
         args = {"match[]": ["metric_name1", "metric_name2"]}
-        result = ctrl.get(**args)
+        with base.quiet_expected_exception():
+            result = self.get_json('/series', **args,
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_status(self):
-        ctrl = status.StatusController()
-        result = ctrl.get("runtimeinfo")
+        with base.quiet_expected_exception():
+            result = self.get_json('/status/runtimeinfo',
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_targets(self):
-        ctrl = targets.TargetsController()
-        result = ctrl.get("somestate")
+        with base.quiet_expected_exception():
+            result = self.get_json('/targets/somestate',
+                                   headers=self.admin_auth_headers,
+                                   status=self.expected_status_code,
+                                   expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
 
 class TestCoreEndpointsServerSideError(
@@ -121,6 +125,7 @@ class TestCoreEndpointsServerSideError(
     CoreEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 508
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -133,9 +138,6 @@ class TestCoreEndpointsServerSideError(
         )
         self.mock_get.start()
 
-        self.expected_content = str(exception)
-        super().setUp()
-
     def tearDown(self):
         self.mock_get.stop()
         super().tearDown()
@@ -146,6 +148,7 @@ class TestCoreEndpointsClientSideError(
     CoreEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 418
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -158,9 +161,6 @@ class TestCoreEndpointsClientSideError(
         )
         self.mock_get.start()
 
-        self.expected_content = str(exception)
-        super().setUp()
-
     def tearDown(self):
         self.mock_get.stop()
         super().tearDown()
@@ -171,6 +171,7 @@ class TestCoreEndpointsUnexpectedStatusCodeError(
     CoreEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 501
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -182,9 +183,6 @@ class TestCoreEndpointsUnexpectedStatusCodeError(
             side_effect=exception
         )
         self.mock_get.start()
-
-        self.expected_content = str(exception)
-        super().setUp()
 
     def tearDown(self):
         self.mock_get.stop()
