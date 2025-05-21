@@ -25,25 +25,95 @@ from aetos.tests.functional import base
 
 
 class TestAdminEndpointsAsReader(base.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.expected_status_code = 403
+        self.expected_fault_string = "RBAC Authorization Failed"
+
     def test_snapshot(self):
-        pass
+        result = self.post_json('/admin/tsdb/snapshot', {},
+                                headers=self.reader_auth_headers,
+                                status=self.expected_status_code,
+                                expect_errors=True)
+
+        self.assertEqual(self.expected_status_code, result.status_code)
+        self.assertEqual(self.expected_fault_string,
+                         result.json['error_message']['faultstring'])
 
     def test_delete_series(self):
-        pass
+        params = {"match[]": ["metric_name1", "metric_name2"]}
+        result = self.post_json('/admin/tsdb/delete_series', params,
+                                headers=self.reader_auth_headers,
+                                status=self.expected_status_code,
+                                expect_errors=True)
+
+        self.assertEqual(self.expected_status_code, result.status_code)
+        # NOTE(jwysogla): the delete_series doesn't use wsme, so the
+        # error message is slightly differently formatted, but the same
+        # status code is still returned and the meaning of the error message
+        # is also the same. But this is the reason why we're using assertIn
+        # instead of assertEqual here.
+        self.assertIn(self.expected_fault_string, result.json['error_message'])
 
     def test_clean_tombstones(self):
-        pass
+        result = self.post_json('/admin/tsdb/clean_tombstones', {},
+                                headers=self.reader_auth_headers,
+                                status=self.expected_status_code,
+                                expect_errors=True)
+
+        self.assertEqual(self.expected_status_code, result.status_code)
+        self.assertEqual(self.expected_fault_string,
+                         result.json['error_message']['faultstring'])
 
 
 class TestAdminEndpointsAsAdmin(base.TestCase):
     def test_snapshot(self):
-        pass
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": {
+                "name": 'somefilename'
+            }
+        }
+
+        with mock.patch.object(
+            prometheus_client.PrometheusAPIClient,
+            '_post',
+            return_value=returned_from_prometheus
+        ):
+            result = self.post_json('/admin/tsdb/snapshot', {},
+                                    headers=self.admin_auth_headers,
+                                    status=expected_status_code)
+
+        self.assertEqual(expected_status_code, result.status_code)
+        self.assertEqual(returned_from_prometheus, result.json)
 
     def test_delete_series(self):
-        pass
+        expected_status_code = 204
+        params = {"match[]": ["metric_name1", "metric_name2"]}
+        with mock.patch.object(
+            prometheus_client.PrometheusAPIClient,
+            '_post',
+            return_value={}
+        ):
+            result = self.post_json('/admin/tsdb/delete_series', params,
+                                    headers=self.admin_auth_headers,
+                                    status=expected_status_code)
+
+        self.assertEqual(expected_status_code, result.status_code)
 
     def test_clean_tombstones(self):
-        pass
+        expected_status_code = 204
+        with mock.patch.object(
+            prometheus_client.PrometheusAPIClient,
+            '_post',
+            return_value={}
+        ):
+            result = self.post_json('/admin/tsdb/clean_tombstones', {},
+                                    headers=self.admin_auth_headers,
+                                    status=expected_status_code)
+
+        self.assertEqual(expected_status_code, result.status_code)
 
 
 class AdminEndpointsErrorCommonTests():

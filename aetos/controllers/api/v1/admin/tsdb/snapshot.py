@@ -19,6 +19,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -28,8 +29,12 @@ class SnapshotController(base.Base):
     def post(self):
         """Snapshot endpoint"""
         # TODO(jwysogla)
-        # - check policies. This should be accessible to admin only.
         # - handle unsuccessful requests
+
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        rbac.enforce('admin_snapshot', pecan.request.headers,
+                     pecan.request.enforcer, target)
+
         self.create_prometheus_client(pecan.request.cfg)
         result = self.prometheus_post("admin/tsdb/snapshot")
         LOG.debug("Data received from prometheus: %s", str(result))
