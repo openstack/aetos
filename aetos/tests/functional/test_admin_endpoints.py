@@ -17,18 +17,14 @@ test_admin_endpoints
 Tests for endpoints under /api/v1/admin/tsdb
 """
 
-import pecan
 from unittest import mock
 
 from observabilityclient import prometheus_client
 
-from aetos.controllers.api.v1.admin.tsdb import clean_tombstones
-from aetos.controllers.api.v1.admin.tsdb import delete_series
-from aetos.controllers.api.v1.admin.tsdb import snapshot
-from aetos.tests.unit import base
+from aetos.tests.functional import base
 
 
-class TestAdminEndpointsAsUser(base.TestCase):
+class TestAdminEndpointsAsReader(base.TestCase):
     def test_snapshot(self):
         pass
 
@@ -52,26 +48,32 @@ class TestAdminEndpointsAsAdmin(base.TestCase):
 
 class AdminEndpointsErrorCommonTests():
     def test_delete_series(self):
-        ctrl = delete_series.DeleteSeriesController()
-        args = {"match[]": ["metric_name1", "metric_name2"]}
-        result = ctrl.post(**args)
+        params = {"match[]": ["metric_name1", "metric_name2"]}
+        with base.quiet_expected_exception():
+            result = self.post_json('/admin/tsdb/delete_series', params,
+                                    headers=self.admin_auth_headers,
+                                    status=self.expected_status_code,
+                                    expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_snapshot(self):
-        ctrl = snapshot.SnapshotController()
-        result = ctrl.post()
+        with base.quiet_expected_exception():
+            result = self.post_json('/admin/tsdb/snapshot', {},
+                                    headers=self.admin_auth_headers,
+                                    status=self.expected_status_code,
+                                    expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
     def test_clean_tombstones(self):
-        ctrl = clean_tombstones.CleanTombstonesController()
-        result = ctrl.post()
+        with base.quiet_expected_exception():
+            result = self.post_json('/admin/tsdb/clean_tombstones', {},
+                                    headers=self.admin_auth_headers,
+                                    status=self.expected_status_code,
+                                    expect_errors=True)
 
-        self.assertEqual(self.expected_status_code, pecan.response.status)
-        self.assertIn(str(self.expected_content), str(result))
+        self.assertEqual(self.expected_status_code, result.status_code)
 
 
 class TestAdminEndpointsServerSideError(
@@ -79,6 +81,7 @@ class TestAdminEndpointsServerSideError(
     AdminEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 508
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -91,9 +94,6 @@ class TestAdminEndpointsServerSideError(
         )
         self.mock_post.start()
 
-        self.expected_content = str(exception)
-        super().setUp()
-
     def tearDown(self):
         self.mock_post.stop()
         super().tearDown()
@@ -104,6 +104,7 @@ class TestAdminEndpointsClientSideError(
     AdminEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 418
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -116,9 +117,6 @@ class TestAdminEndpointsClientSideError(
         )
         self.mock_post.start()
 
-        self.expected_content = str(exception)
-        super().setUp()
-
     def tearDown(self):
         self.mock_post.stop()
         super().tearDown()
@@ -129,6 +127,7 @@ class TestAdminEndpointsUnexpectedStatusCodeError(
     AdminEndpointsErrorCommonTests
 ):
     def setUp(self):
+        super().setUp()
         self.expected_status_code = 501
 
         exception = prometheus_client.PrometheusAPIClientError(
@@ -140,9 +139,6 @@ class TestAdminEndpointsUnexpectedStatusCodeError(
             side_effect=exception
         )
         self.mock_post.start()
-
-        self.expected_content = str(exception)
-        super().setUp()
 
     def tearDown(self):
         self.mock_post.stop()
