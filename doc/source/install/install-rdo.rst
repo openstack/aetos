@@ -16,7 +16,7 @@ Install and configure components
 
    .. code-block:: console
 
-      # yum install
+      # dnf install openstack-aetos-api
 
 .. include:: common_configure.rst
 
