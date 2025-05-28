@@ -18,6 +18,7 @@ import pecan
 import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -27,8 +28,12 @@ class CleanTombstonesController(base.Base):
     def post(self):
         """clean_tombstones endpoint"""
         # TODO(jwysogla)
-        # - check policies. This should be accessible to admin only.
         # - handle unsuccessful requests
+
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        rbac.enforce('admin_clean_tombstones', pecan.request.headers,
+                     pecan.request.enforcer, target)
+
         self.create_prometheus_client(pecan.request.cfg)
         self.prometheus_post("admin/tsdb/clean_tombstones")
         # On success don't return anything

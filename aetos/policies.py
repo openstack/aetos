@@ -30,23 +30,42 @@ rules = [
         name="segregation",
         check_str=RULE_CONTEXT_IS_ADMIN),
 
-    # TODO(jwysogla): Add policies. Below is an example
-    # taken from Aodh
-
-    # policy.DocumentedRuleDefault(
-    #    name="telemetry:get_alarm",
-    #    check_str=PROJECT_READER,
-    #    scope_types=['project'],
-    #    description='Get an alarm.',
-    #    operations=[
-    #        {
-    #            'path': '/v2/alarms/{alarm_id}',
-    #            'method': 'GET'
-    #        }
-    #    ],
-    #    deprecated_rule=deprecated_get_alarm
-    #
-    # ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:admin_delete_metrics",
+        check_str=PROJECT_ADMIN,
+        scope_types=['project'],
+        description='Delete metrics.',
+        operations=[
+            {
+                'path': '/api/v1/admin/tsdb/delete_series',
+                'method': 'POST'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:admin_snapshot",
+        check_str=PROJECT_ADMIN,
+        scope_types=['project'],
+        description='Take snapshot of the database.',
+        operations=[
+            {
+                'path': '/api/v1/admin/tsdb/snapshot',
+                'method': 'POST'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:admin_clean_tombstones",
+        check_str=PROJECT_ADMIN,
+        scope_types=['project'],
+        description='Clean tombstones.',
+        operations=[
+            {
+                'path': '/api/v1/admin/tsdb/clean_tombstones',
+                'method': 'POST'
+            }
+        ],
+    ),
 ]
 
 

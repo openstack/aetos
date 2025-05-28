@@ -18,6 +18,7 @@ import pecan
 from wsme import exc
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -31,9 +32,13 @@ class DeleteSeriesController(base.Base):
     def post(self, **args):
         """Delete_series endpoint"""
         # TODO(jwysogla):
-        # - policy handling
         # - handle unknown, missing and optional parameters
         # - handle unsuccessful calls to prometheus
+
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        rbac.enforce('admin_delete_metrics', pecan.request.headers,
+                     pecan.request.enforcer, target)
+
         self.create_prometheus_client(pecan.request.cfg)
         matches = args.get('match[]', [])
         start = args.get('start', None)
