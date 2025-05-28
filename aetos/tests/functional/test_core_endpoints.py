@@ -17,11 +17,53 @@ test_core_endpoints
 Tests for endpoints under /api/v1
 """
 
-from unittest import mock
-
 from observabilityclient import prometheus_client
+from observabilityclient import rbac
+import os
+from unittest import mock
+import webtest
 
+from aetos import app
 from aetos.tests.functional import base
+
+
+class TestCoreEndpointsForbidden(base.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.expected_status_code = 403
+        self.expected_fault_string = "RBAC Authorization Failed"
+
+        pf = os.path.abspath('aetos/tests/functional/policy.yaml-test')
+        self.CONF.set_override('policy_file', pf, group='oslo_policy')
+        self.CONF.set_override('auth_mode', None, group=None)
+        self.app = webtest.TestApp(app.load_app(self.CONF))
+
+    def test_label(self):
+        pass
+
+    def test_labels(self):
+        pass
+
+    def test_query(self):
+        query_string = 'ceilometer_image_size'
+        params = {'query': query_string}
+
+        result = self.get_json('/query', **params,
+                               headers=self.reader_auth_headers,
+                               status=self.expected_status_code)
+
+        self.assertEqual(self.expected_status_code, result.status_code)
+        self.assertEqual(self.expected_fault_string,
+                         result.json['error_message']['faultstring'])
+
+    def test_series(self):
+        pass
+
+    def test_status(self):
+        pass
+
+    def test_targets(self):
+        pass
 
 
 class TestCoreEndpointsAsUser(base.TestCase):
@@ -32,7 +74,56 @@ class TestCoreEndpointsAsUser(base.TestCase):
         pass
 
     def test_query(self):
-        pass
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": {
+                "resultType": "vector",
+                "result": [
+                    {
+                        "metric": {
+                            "__name__": "ceilometer_image_size",
+                            "counter": "image.size",
+                            "image": "828ab616-8904-48fb-a4bb-d037473cee7d",
+                            "instance": "localhost:3000",
+                            "job": "sg-core",
+                            "project": "2dd8edd6c8c24f49bf04670534f6b357",
+                            "publisher": "localhost.localdomain",
+                            "resource": "828ab616-8904-48fb-a4bb-d037473cee7d",
+                            "resource_name": "cirros-0.6.2-x86_64-disk",
+                            "type": "size",
+                            "unit": "B"
+                            },
+                        "value": [
+                            1748273657.273,
+                            "21430272"
+                            ]
+                        }
+                    ]
+                }
+            }
+
+        query_string = 'ceilometer_image_size'
+        modified_query_string = \
+            f'ceilometer_image_size{{project_id={self.project_id}}}'
+        params = {'query': query_string}
+        modified_params = {'query': modified_query_string}
+
+        with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                              return_value=returned_from_prometheus
+                              ) as get_mock,
+            mock.patch.object(rbac.PromQLRbac, 'modify_query',
+                              return_value=modified_query_string) as rbac_mock
+            ):
+            result = self.get_json('/query', **params,
+                                   headers=self.reader_auth_headers,
+                                   status=expected_status_code)
+
+        self.assertEqual(returned_from_prometheus, result.json)
+        self.assertEqual(expected_status_code, result.status_code)
+        get_mock.assert_called_once_with('query', modified_params)
+        rbac_mock.assert_called_once_with(query_string)
 
     def test_series(self):
         pass
@@ -52,7 +143,52 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
         pass
 
     def test_query(self):
-        pass
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": {
+                "resultType": "vector",
+                "result": [
+                    {
+                        "metric": {
+                            "__name__": "ceilometer_image_size",
+                            "counter": "image.size",
+                            "image": "828ab616-8904-48fb-a4bb-d037473cee7d",
+                            "instance": "localhost:3000",
+                            "job": "sg-core",
+                            "project": "2dd8edd6c8c24f49bf04670534f6b357",
+                            "publisher": "localhost.localdomain",
+                            "resource": "828ab616-8904-48fb-a4bb-d037473cee7d",
+                            "resource_name": "cirros-0.6.2-x86_64-disk",
+                            "type": "size",
+                            "unit": "B"
+                            },
+                        "value": [
+                            1748273657.273,
+                            "21430272"
+                            ]
+                        }
+                    ]
+                }
+            }
+
+        query_string = 'ceilometer_image_size'
+        params = {'query': query_string}
+
+        with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                              return_value=returned_from_prometheus
+                              ) as get_mock,
+            mock.patch.object(rbac.PromQLRbac, 'modify_query') as rbac_mock
+            ):
+            result = self.get_json('/query', **params,
+                                   headers=self.admin_auth_headers,
+                                   status=expected_status_code)
+
+        self.assertEqual(returned_from_prometheus, result.json)
+        self.assertEqual(expected_status_code, result.status_code)
+        get_mock.assert_called_once_with('query', params)
+        rbac_mock.assert_not_called()
 
     def test_series(self):
         pass

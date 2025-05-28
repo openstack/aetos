@@ -43,12 +43,13 @@ class TestCase(base.TestCase):
 
     def setUp(self):
         super().setUp()
+        self.project_id = 'project1'
         self.admin_auth_headers = {'X-User-Id': 'admin_user',
-                                   'X-Project-Id': 'project1',
+                                   'X-Project-Id': self.project_id,
                                    'X-Roles': 'admin'}
 
         self.reader_auth_headers = {'X-User-Id': 'reader_user',
-                                    'X-Project-Id': 'project1',
+                                    'X-Project-Id': self.project_id,
                                     'X-Roles': 'reader'}
 
         conf = service.prepare_service(argv=[], config_files=[])
@@ -106,8 +107,6 @@ class TestCase(base.TestCase):
                                 extra_environ=extra_environ,
                                 expect_errors=expect_errors,
                                 status=status)
-        if not expect_errors:
-            response = response.json
         return response
 
 

@@ -24,6 +24,8 @@ UNPROTECTED = ''
 PROJECT_ADMIN = 'role:admin and project_id:%(project_id)s'
 PROJECT_MEMBER = 'role:member and project_id:%(project_id)s'
 PROJECT_READER = 'role:reader and project_id:%(project_id)s'
+SERVICE = 'role:service'
+PROJECT_ADMIN_OR_SERVICE = f'({PROJECT_ADMIN}) or ({SERVICE})'
 
 rules = [
     policy.RuleDefault(
@@ -63,6 +65,30 @@ rules = [
             {
                 'path': '/api/v1/admin/tsdb/clean_tombstones',
                 'method': 'POST'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:query",
+        check_str=PROJECT_READER,
+        scope_types=['project'],
+        description='Prometheus Query endpoint with tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/query',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:query:all_projects",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus Query endpoint without tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/query',
+                'method': 'GET'
             }
         ],
     ),
