@@ -92,6 +92,102 @@ rules = [
             }
         ],
     ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:label",
+        check_str=PROJECT_READER,
+        scope_types=['project'],
+        description='Prometheus label endpoint with tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/label',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:label:all_projects",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus label endpoint without tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/label',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:labels",
+        check_str=PROJECT_READER,
+        scope_types=['project'],
+        description='Prometheus labels endpoint with tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/labels',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:labels:all_projects",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus labels endpoint without tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/labels',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:series",
+        check_str=PROJECT_READER,
+        scope_types=['project'],
+        description='Prometheus series endpoint with tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/series',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:series:all_projects",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus series endpoint without tenancy enforced.',
+        operations=[
+            {
+                'path': '/api/v1/series',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:targets",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus targets endpoint.',
+        operations=[
+            {
+                'path': '/api/v1/targets',
+                'method': 'GET'
+            }
+        ],
+    ),
+    policy.DocumentedRuleDefault(
+        name="telemetry:status",
+        check_str=PROJECT_ADMIN_OR_SERVICE,
+        scope_types=['project'],
+        description='Prometheus status endpoint.',
+        operations=[
+            {
+                'path': '/api/v1/status',
+                'method': 'GET'
+            }
+        ],
+    ),
 ]
 
 

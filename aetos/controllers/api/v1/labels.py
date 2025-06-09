@@ -13,12 +13,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
 import pecan
+from webob import exc
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -27,11 +30,34 @@ class LabelsController(base.Base):
     @wsme_pecan.wsexpose(wtypes.text)
     def get(self):
         """Labels endpoint"""
-        # NOTE(jwysogla): This gives access to label names. I don't think
-        # we need to do restrictions here. If it turns out we need to
-        # enforce tenancy, we should be able to use the match[]
-        # query parameter of the endpoint.
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        try:
+            rbac.enforce('labels:all_projects', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = True
+            LOG.debug(
+                "Received a high privilege request for the labels endpoint"
+            )
+        except exc.HTTPForbidden:
+            rbac.enforce('labels', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = False
+            LOG.debug(
+                "Received a low privilege request for the labels endpoint"
+            )
+
         self.create_prometheus_client(pecan.request.cfg)
-        result = self.prometheus_get("labels")
+
+        if privileged:
+            result = self.prometheus_get("labels")
+        else:
+            promQLRbac = obsc_rbac.PromQLRbac(
+                self.prometheus_client,
+                target['project_id']
+            )
+            result = self.prometheus_get(
+                "labels", {"match[]": promQLRbac.append_rbac_labels('')}
+            )
+
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

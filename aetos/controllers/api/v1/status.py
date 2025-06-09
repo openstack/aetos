@@ -20,6 +20,7 @@ from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -28,6 +29,10 @@ class StatusController(base.Base):
     @wsme_pecan.wsexpose(wtypes.text, wtypes.text)
     def get(self, arg):
         """Status endpoint"""
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        rbac.enforce('status', pecan.request.headers,
+                     pecan.request.enforcer, target)
+
         self.create_prometheus_client(pecan.request.cfg)
         if arg == "runtimeinfo":
             result = self.prometheus_get("status/runtimeinfo")
