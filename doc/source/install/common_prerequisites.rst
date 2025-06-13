@@ -2,39 +2,7 @@ Prerequisites
 -------------
 
 Before you install and configure the aetos service,
-you must create a database, service credentials, and API endpoints.
-
-#. To create the database, complete these steps:
-
-   * Use the database access client to connect to the database
-     server as the ``root`` user:
-
-     .. code-block:: console
-
-        $ mysql -u root -p
-
-   * Create the ``aetos`` database:
-
-     .. code-block:: none
-
-        CREATE DATABASE aetos;
-
-   * Grant proper access to the ``aetos`` database:
-
-     .. code-block:: none
-
-        GRANT ALL PRIVILEGES ON aetos.* TO 'aetos'@'localhost' \
-          IDENTIFIED BY 'AETOS_DBPASS';
-        GRANT ALL PRIVILEGES ON aetos.* TO 'aetos'@'%' \
-          IDENTIFIED BY 'AETOS_DBPASS';
-
-     Replace ``AETOS_DBPASS`` with a suitable password.
-
-   * Exit the database access client.
-
-     .. code-block:: none
-
-        exit;
+you must create service credentials, and API endpoints.
 
 #. Source the ``admin`` credentials to gain access to
    admin-only CLI commands:
@@ -50,6 +18,18 @@ you must create a database, service credentials, and API endpoints.
      .. code-block:: console
 
         $ openstack user create --domain default --password-prompt aetos
+        User Password:
+        Repeat User Password:
+        +---------------------+----------------------------------+
+        | Field               | Value                            |
+        +---------------------+----------------------------------+
+        | domain_id           | default                          |
+        | enabled             | True                             |
+        | id                  | b7657c9ea07a4556aef5d34cf70713a3 |
+        | name                | aetos                            |
+        | options             | {}                               |
+        | password_expires_at | None                             |
+        +---------------------+----------------------------------+
 
    * Add the ``admin`` role to the ``aetos`` user:
 
@@ -57,19 +37,72 @@ you must create a database, service credentials, and API endpoints.
 
         $ openstack role add --project service --user aetos admin
 
+     .. note::
+
+        This command provides no output.
+
+
    * Create the aetos service entities:
 
      .. code-block:: console
 
-        $ openstack service create --name aetos --description "aetos" aetos
+        $ openstack service create --name aetos --description "OpenStack Aetos Service" prometheus
+        +-------------+----------------------------------+
+        | Field       | Value                            |
+        +-------------+----------------------------------+
+        | description | OpenStack Aetos Service          |
+        | enabled     | True                             |
+        | id          | 3405453b14da441ebb258edfeba96d83 |
+        | name        | aetos                            |
+        | type        | prometheus                       |
+        +-------------+----------------------------------+
 
 #. Create the aetos service API endpoints:
 
    .. code-block:: console
 
       $ openstack endpoint create --region RegionOne \
-        aetos public http://controller:XXXX/vY/%\(tenant_id\)s
+        prometheus public http://controller/prometheus
+        +--------------+-----------------------------------+
+        | Field        | Value                             |
+        +--------------+-----------------------------------+
+        | enabled      | True                              |
+        | id           | 1196727cc22a4a26a011688236c38da9  |
+        | interface    | public                            |
+        | region       | RegionOne                         |
+        | region_id    | RegionOne                         |
+        | service_id   | 3405453b14da441ebb258edfeba96d83  |
+        | service_name | aetos                             |
+        | service_type | prometheus                        |
+        | url          | http://controller/prometheus      |
+        +--------------+-----------------------------------+
       $ openstack endpoint create --region RegionOne \
-        aetos internal http://controller:XXXX/vY/%\(tenant_id\)s
+        prometheus internal http://controller/prometheus
+        +--------------+-----------------------------------+
+        | Field        | Value                             |
+        +--------------+-----------------------------------+
+        | enabled      | True                              |
+        | id           | 1196727cc22a4a26a011688236c38da9  |
+        | interface    | internal                          |
+        | region       | RegionOne                         |
+        | region_id    | RegionOne                         |
+        | service_id   | 3405453b14da441ebb258edfeba96d83  |
+        | service_name | aetos                             |
+        | service_type | prometheus                        |
+        | url          | http://controller/prometheus      |
+        +--------------+-----------------------------------+
       $ openstack endpoint create --region RegionOne \
-        aetos admin http://controller:XXXX/vY/%\(tenant_id\)s
+        prometheus admin http://controller/prometheus
+        +--------------+-----------------------------------+
+        | Field        | Value                             |
+        +--------------+-----------------------------------+
+        | enabled      | True                              |
+        | id           | 1196727cc22a4a26a011688236c38da9  |
+        | interface    | admin                             |
+        | region       | RegionOne                         |
+        | region_id    | RegionOne                         |
+        | service_id   | 3405453b14da441ebb258edfeba96d83  |
+        | service_name | aetos                             |
+        | service_type | prometheus                        |
+        | url          | http://controller/prometheus      |
+        +--------------+-----------------------------------+

@@ -1,6 +1,6 @@
-============================
-So You Want to Contribute...
-============================
+=====================
+Contributing to Aetos
+=====================
 
 For general information on contributing to OpenStack, please check out the
 `contributor guide <https://docs.openstack.org/contributors/>`_ to get started.
@@ -13,36 +13,12 @@ with aetos.
 
 Communication
 ~~~~~~~~~~~~~
-.. This would be a good place to put the channel you chat in as a project; when/
-   where your meeting is, the tags you prepend to your ML threads, etc.
+:Mailing list: http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-discuss (prefix subjects with ``[Aetos]`` for faster responses)
+:IRC: #openstack-telemetry
 
 Contacting the Core Team
 ~~~~~~~~~~~~~~~~~~~~~~~~
-.. This section should list the core team, their irc nicks, emails, timezones
-   etc. If all this info is maintained elsewhere (i.e. a wiki), you can link to
-   that instead of enumerating everyone here.
-
-New Feature Planning
-~~~~~~~~~~~~~~~~~~~~
-.. This section is for talking about the process to get a new feature in. Some
-   projects use blueprints, some want specs, some want both! Some projects
-   stick to a strict schedule when selecting what new features will be reviewed
-   for a release.
-
-Task Tracking
-~~~~~~~~~~~~~
-.. This section is about where you track tasks- launchpad? storyboard? is there
-   more than one launchpad project? what's the name of the project group in
-   storyboard?
-
-We track our tasks in Launchpad
-
-   https://bugs.launchpad.net/aetos
-
-If you're looking for some smaller, easier work item to pick up and get started
-on, search for the 'low-hanging-fruit' tag.
-
-.. NOTE: If your tag is not 'low-hanging-fruit' please change the text above.
+:List of telemetry core members: https://review.opendev.org/admin/groups/7586a97d8db096591fa23b5632df561896dae55a,members
 
 Reporting a Bug
 ~~~~~~~~~~~~~~~
@@ -52,18 +28,3 @@ Reporting a Bug
 You found an issue and want to make sure we are aware of it? You can do so on
 `Launchpad
 <https://bugs.launchpad.net/aetos>`_.
-
-Getting Your Patch Merged
-~~~~~~~~~~~~~~~~~~~~~~~~~
-.. This section should have info about what it takes to get something merged. Do
-   you require one or two +2's before +W? Do some of your repos require unit
-   test changes with all patches? etc.
-
-Project Team Lead Duties
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. this section is where you can put PTL specific duties not already listed in
-   the common PTL guide (linked below), or if you already have them written
-   up elsewhere you can link to that doc here.
-
-All common PTL duties are enumerated in the `PTL guide
-<https://docs.openstack.org/project-team-guide/ptl.html>`_.

@@ -8,7 +8,7 @@ aetos service, code-named aetos, on the controller node.
 
 This section assumes that you already have a working OpenStack
 environment with at least the following components installed:
-.. (add the appropriate services here and further notes)
+Prometheus
 
 Note that installation and configuration vary by distribution.
 

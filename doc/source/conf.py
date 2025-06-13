@@ -14,6 +14,9 @@
 import os
 import sys
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -22,8 +25,26 @@ sys.path.insert(0, os.path.abspath('../..'))
 extensions = [
     'sphinx.ext.autodoc',
     'openstackdocstheme',
+    'oslo_config.sphinxconfiggen',
+    'oslo_config.sphinxext',
+    'oslo_policy.sphinxpolicygen',
+    'oslo_policy.sphinxext',
+    'wsmeext.sphinxext',
+    'sphinxcontrib.pecanwsme.rest',
+    'sphinxcontrib.httpdomain',
+
     # 'sphinx.ext.intersphinx',
 ]
+
+config_generator_config_file = os.path.join(
+    ROOT, 'etc/aetos/aetos-config-generator.conf')
+sample_config_basename = '_static/aetos'
+
+policy_generator_config_file = os.path.join(
+    ROOT, 'etc/aetos/aetos-policy-generator.conf'
+)
+sample_policy_basename = '_static/aetos'
+
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
