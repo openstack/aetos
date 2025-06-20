@@ -17,6 +17,7 @@ from pecan import rest
 from wsme import exc
 
 from observabilityclient import prometheus_client
+from observabilityclient import rbac as obsc_rbac
 from oslo_config import cfg
 from oslo_utils import netutils
 
@@ -47,6 +48,27 @@ class Base(rest.RestController):
         url = f"{prometheus_host}:{prometheus_port}"
         self.prometheus_client = prometheus_client.PrometheusAPIClient(url)
         super(object, self).__init__()
+
+    def process_matches(self, matches, privileged, project_id):
+        # Ensure matches is always a list
+        if not isinstance(matches, list):
+            matches = [matches]
+
+        # If user has high privileges, return matches as-is
+        if privileged:
+            return matches
+
+        promQLRbac = obsc_rbac.PromQLRbac(self.prometheus_client, project_id)
+
+        if matches == []:
+            return promQLRbac.append_rbac_labels('')
+
+        # Apply RBAC modification to each match
+        modified_matches = []
+        for match in matches:
+            modified_matches.append(promQLRbac.modify_query(match))
+
+        return modified_matches
 
     @staticmethod
     def _get_correct_exception(e):

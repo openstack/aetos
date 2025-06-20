@@ -15,7 +15,6 @@
 
 import json
 
-from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
 import pecan
 from webob import exc
@@ -54,39 +53,21 @@ class LabelsController(base.Base):
             return json.dumps("page not found")
 
         matches = kwargs.get('match[]', [])
-        if not isinstance(matches, list):
-            matches = [matches]
 
         self.create_prometheus_client(pecan.request.cfg)
 
-        if privileged:
-            LOG.debug("Matches sent to prometheus: %s", str(matches))
-            try:
-                result = self.prometheus_get("labels", {"match[]": matches})
-            except wsme_exc.ClientSideError as e:
-                status_code = e.code
-                result = e.msg
-        else:
-            promQLRbac = obsc_rbac.PromQLRbac(
-                self.prometheus_client,
-                target['project_id']
+        processed_matches = self.process_matches(
+            matches, privileged, target['project_id']
+        )
+
+        LOG.debug("Matches sent to prometheus: %s", str(processed_matches))
+        try:
+            result = self.prometheus_get(
+                "labels", {"match[]": processed_matches}
             )
-            modified_matches = []
-            if matches == []:
-                modified_matches = promQLRbac.append_rbac_labels('')
-            else:
-                for match in matches:
-                    modified_matches.append(
-                        promQLRbac.modify_query(match)
-                    )
-            LOG.debug("Matches sent to prometheus: %s", str(modified_matches))
-            try:
-                result = self.prometheus_get(
-                    "labels", {"match[]": modified_matches}
-                )
-            except wsme_exc.ClientSideError as e:
-                status_code = e.code
-                result = e.msg
+        except wsme_exc.ClientSideError as e:
+            status_code = e.code
+            result = e.msg
 
         LOG.debug("Data received from prometheus: %s", str(result))
 
