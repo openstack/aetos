@@ -2,7 +2,7 @@
     queue: telemetry
     templates:
       - openstack-python3-jobs
-      # TODO(tkajinm): Enable these once ready
-      #- publish-openstack-docs-pti
+      - publish-openstack-docs-pti
+      # TODO(tkajinm): Enable this once ready
       #- release-notes-jobs-python3
       - check-requirements
