@@ -14,12 +14,14 @@
 # under the License.
 
 import json
-import pecan
-from wsme import exc
-
+from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
+import pecan
+from webob import exc
+from wsme import exc as wsme_exc
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -32,23 +34,46 @@ class SeriesController(base.Base):
     @pecan.expose(content_type='application/json')
     def get(self, **args):
         """Series endpoint"""
-        # TODO(jwysogla):
-        # - policy handling
-        # - match modification
-        # - handle unknown parameters
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        try:
+            rbac.enforce('series:all_projects', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = True
+            LOG.debug(
+                "Received a high privilege request for the series endpoint"
+            )
+        except exc.HTTPForbidden:
+            rbac.enforce('series', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = False
+            LOG.debug(
+                "Received a low privilege request for the series endpoint"
+            )
+
         self.create_prometheus_client(pecan.request.cfg)
         status_code = 200
 
-        matches = args['match[]']
-        modified_matches = matches
-
+        matches = args.get('match[]', [])
+        if not isinstance(matches, list):
+            matches = [matches]
         LOG.debug("Unmodified matches received: %s", str(matches))
+
+        modified_matches = matches
+        if not privileged:
+            promQLRbac = obsc_rbac.PromQLRbac(
+                self.prometheus_client,
+                target['project_id']
+            )
+            modified_matches = []
+            for match in matches:
+                modified_matches.append(promQLRbac.modify_query(match))
+
         LOG.debug("Matches sent to prometheus: %s", str(modified_matches))
 
         try:
             result = self.prometheus_get("series",
                                          {'match[]': modified_matches})
-        except exc.ClientSideError as e:
+        except wsme_exc.ClientSideError as e:
             # NOTE(jwysogla): We need a special handling of the exceptions,
             # because we don't use wsexpose as with most of other endpoints.
             status_code = e.code

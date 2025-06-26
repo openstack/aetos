@@ -13,13 +13,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
 import pecan
+from webob import exc
 from wsme.exc import ClientSideError
 from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
 from aetos.controllers.api.v1 import base
+from aetos import rbac
 
 LOG = log.getLogger(__name__)
 
@@ -28,14 +31,38 @@ class LabelController(base.Base):
     @wsme_pecan.wsexpose(wtypes.text, wtypes.text, wtypes.text)
     def get(self, name, values):
         """Label endpoint"""
-        # TODO(jwysogla):
-        # - policy handling
-        # - query modification
-        # - handle non successful http statusses
-        self.create_prometheus_client(pecan.request.cfg)
-        LOG.debug("Label name: %s", name)
+        target = {"project_id": pecan.request.headers.get('X-Project-Id')}
+        try:
+            rbac.enforce('label:all_projects', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = True
+            LOG.debug(
+                "Received a high privilege request for the label endpoint"
+            )
+        except exc.HTTPForbidden:
+            rbac.enforce('label', pecan.request.headers,
+                         pecan.request.enforcer, target)
+            privileged = False
+            LOG.debug(
+                "Received a low privilege request for the label endpoint"
+            )
+
         if values != "values":
             raise ClientSideError("page not found", 404)
-        result = self.prometheus_get(f"label/{name}/values")
+
+        self.create_prometheus_client(pecan.request.cfg)
+
+        LOG.debug("Label name: %s", name)
+        if privileged:
+            result = self.prometheus_get(f"label/{name}/values")
+        else:
+            promQLRbac = obsc_rbac.PromQLRbac(
+                self.prometheus_client,
+                target['project_id']
+            )
+            result = self.prometheus_get(
+                f"label/{name}/values",
+                {"match[]": promQLRbac.append_rbac_labels('')}
+            )
         LOG.debug("Data received from prometheus: %s", str(result))
         return result
