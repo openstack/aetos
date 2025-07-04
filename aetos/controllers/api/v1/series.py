@@ -32,7 +32,7 @@ class SeriesController(base.Base):
     # pecan.expose is used instead, with handling of the arguments
     # as a dictionary inside the function.
     @pecan.expose(content_type='application/json')
-    def get(self, **args):
+    def get(self, *args, **kwargs):
         """Series endpoint"""
         target = {"project_id": pecan.request.headers.get('X-Project-Id')}
         try:
@@ -53,7 +53,11 @@ class SeriesController(base.Base):
         self.create_prometheus_client(pecan.request.cfg)
         status_code = 200
 
-        matches = args.get('match[]', [])
+        if len(args) != 0:
+            pecan.response.status = 404
+            return json.dumps("page not found")
+
+        matches = kwargs.get('match[]', [])
         if not isinstance(matches, list):
             matches = [matches]
         LOG.debug("Unmodified matches received: %s", str(matches))

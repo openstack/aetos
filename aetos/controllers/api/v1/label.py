@@ -13,13 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
+
 from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
 import pecan
 from webob import exc
-from wsme.exc import ClientSideError
-from wsme import types as wtypes
-import wsmeext.pecan as wsme_pecan
+from wsme import exc as wsme_exc
 
 from aetos.controllers.api.v1 import base
 from aetos import rbac
@@ -28,8 +28,8 @@ LOG = log.getLogger(__name__)
 
 
 class LabelController(base.Base):
-    @wsme_pecan.wsexpose(wtypes.text, wtypes.text, wtypes.text)
-    def get(self, name, values):
+    @pecan.expose(content_type='application/json')
+    def get(self, *args, **kwargs):
         """Label endpoint"""
         target = {"project_id": pecan.request.headers.get('X-Project-Id')}
         try:
@@ -47,22 +47,53 @@ class LabelController(base.Base):
                 "Received a low privilege request for the label endpoint"
             )
 
-        if values != "values":
-            raise ClientSideError("page not found", 404)
+        status_code = 200
+
+        if len(args) != 2 or args[1] != "values":
+            pecan.response.status = 404
+            return json.dumps("page not found")
+
+        matches = kwargs.get('match[]', [])
+        if not isinstance(matches, list):
+            matches = [matches]
+        name = args[0]
 
         self.create_prometheus_client(pecan.request.cfg)
 
         LOG.debug("Label name: %s", name)
         if privileged:
-            result = self.prometheus_get(f"label/{name}/values")
+            LOG.debug("Matches sent to prometheus: %s", str(matches))
+            try:
+                result = self.prometheus_get(
+                    f"label/{name}/values",
+                    {"match[]": matches}
+                )
+            except wsme_exc.ClientSideError as e:
+                status_code = e.code
+                result = e.msg
         else:
             promQLRbac = obsc_rbac.PromQLRbac(
                 self.prometheus_client,
                 target['project_id']
             )
-            result = self.prometheus_get(
-                f"label/{name}/values",
-                {"match[]": promQLRbac.append_rbac_labels('')}
-            )
+            modified_matches = []
+            if matches == []:
+                modified_matches = promQLRbac.append_rbac_labels('')
+            else:
+                for match in matches:
+                    modified_matches.append(
+                        promQLRbac.modify_query(match)
+                    )
+            LOG.debug("Matches sent to prometheus: %s", str(modified_matches))
+            try:
+                result = self.prometheus_get(
+                    f"label/{name}/values",
+                    {"match[]": modified_matches}
+                )
+            except wsme_exc.ClientSideError as e:
+                status_code = e.code
+                result = e.msg
         LOG.debug("Data received from prometheus: %s", str(result))
-        return result
+
+        pecan.response.status = status_code
+        return json.dumps(result)

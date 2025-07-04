@@ -46,8 +46,12 @@ class TestCoreEndpointsForbidden(base.TestCase):
                                status=self.expected_status_code)
 
         self.assertEqual(self.expected_status_code, result.status_code)
-        self.assertEqual(self.expected_fault_string,
-                         result.json['error_message']['faultstring'])
+        # NOTE(jwysogla): the series doesn't use wsme, so the
+        # error message is slightly differently formatted, but the same
+        # status code is still returned and the meaning of the error message
+        # is also the same. But this is the reason why we're using assertIn
+        # instead of assertEqual here.
+        self.assertIn(self.expected_fault_string, result.json['error_message'])
 
     def test_labels(self):
         result = self.get_json('/labels', {},
@@ -55,8 +59,12 @@ class TestCoreEndpointsForbidden(base.TestCase):
                                status=self.expected_status_code)
 
         self.assertEqual(self.expected_status_code, result.status_code)
-        self.assertEqual(self.expected_fault_string,
-                         result.json['error_message']['faultstring'])
+        # NOTE(jwysogla): the series doesn't use wsme, so the
+        # error message is slightly differently formatted, but the same
+        # status code is still returned and the meaning of the error message
+        # is also the same. But this is the reason why we're using assertIn
+        # instead of assertEqual here.
+        self.assertIn(self.expected_fault_string, result.json['error_message'])
 
     def test_query(self):
         query_string = 'ceilometer_image_size'
@@ -139,6 +147,45 @@ class TestCoreEndpointsAsUser(base.TestCase):
         )
         rbac_mock.assert_called_once_with('')
 
+    def test_label_with_matches(self):
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": [
+                "prometheus",
+                ]
+            }
+
+        label_name = 'job'
+        matches = ["ceilometer_cpu", "{job='prometheus'}"]
+        params = {'match[]': matches}
+        expected_matches = [
+            f"ceilometer_cpu{{project='{self.project_id}'}}",
+            f"{{job='prometheus', project='{self.project_id}'}}"
+        ]
+        expected_params = {'match[]': expected_matches}
+
+        with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                              return_value=returned_from_prometheus
+                              ) as get_mock,
+            mock.patch.object(rbac.PromQLRbac, 'modify_query',
+                              side_effect=lambda x:
+                              expected_matches[matches.index(x)]
+                              ) as rbac_mock
+            ):
+            result = self.get_json(f'/label/{label_name}/values', **params,
+                                   headers=self.reader_auth_headers,
+                                   status=expected_status_code)
+
+        self.assertEqual(returned_from_prometheus, result.json)
+        self.assertEqual(expected_status_code, result.status_code)
+        get_mock.assert_called_once_with(
+            f'label/{label_name}/values', expected_params
+        )
+        for match in matches:
+            rbac_mock.assert_any_call(match)
+
     def test_labels(self):
         expected_status_code = 200
         returned_from_prometheus = {
@@ -171,6 +218,47 @@ class TestCoreEndpointsAsUser(base.TestCase):
             'labels', expected_params
         )
         rbac_mock.assert_called_once_with('')
+
+    def test_labels_with_matches(self):
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": [
+                "__name__",
+                "alarm",
+                "branch",
+                "volume"
+                ]
+            }
+
+        matches = ["ceilometer_cpu", "{job='prometheus'}"]
+        params = {'match[]': matches}
+        expected_matches = [
+            f"ceilometer_cpu{{project='{self.project_id}'}}",
+            f"{{job='prometheus', project='{self.project_id}'}}"
+        ]
+        expected_params = {'match[]': expected_matches}
+
+        with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                              return_value=returned_from_prometheus
+                              ) as get_mock,
+            mock.patch.object(rbac.PromQLRbac, 'modify_query',
+                              side_effect=lambda x:
+                              expected_matches[matches.index(x)]
+                              ) as rbac_mock
+            ):
+            result = self.get_json('/labels', **params,
+                                   headers=self.reader_auth_headers,
+                                   status=expected_status_code)
+
+        self.assertEqual(returned_from_prometheus, result.json)
+        self.assertEqual(expected_status_code, result.status_code)
+        get_mock.assert_called_once_with(
+            'labels', expected_params
+        )
+        for match in matches:
+            rbac_mock.assert_any_call(match)
 
     def test_query(self):
         expected_status_code = 200
@@ -310,6 +398,7 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
             }
 
         label_name = 'job'
+        expected_params = {'match[]': []}
 
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                                return_value=returned_from_prometheus
@@ -320,7 +409,10 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
 
         self.assertEqual(returned_from_prometheus, result.json)
         self.assertEqual(expected_status_code, result.status_code)
-        get_mock.assert_called_once_with(f'label/{label_name}/values', None)
+        get_mock.assert_called_once_with(
+            f'label/{label_name}/values',
+            expected_params
+        )
 
     def test_labels(self):
         expected_status_code = 200
@@ -333,6 +425,7 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
                 "volume"
                 ]
             }
+        expected_params = {'match[]': []}
 
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                                return_value=returned_from_prometheus
@@ -343,7 +436,7 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
 
         self.assertEqual(returned_from_prometheus, result.json)
         self.assertEqual(expected_status_code, result.status_code)
-        get_mock.assert_called_once_with('labels', None)
+        get_mock.assert_called_once_with('labels', expected_params)
 
     def test_query(self):
         expected_status_code = 200

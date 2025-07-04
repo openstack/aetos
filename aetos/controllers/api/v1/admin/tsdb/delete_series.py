@@ -13,6 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
+
 from oslo_log import log
 import pecan
 from wsme import exc
@@ -29,7 +31,7 @@ class DeleteSeriesController(base.Base):
     # pecan.expose is used instead, with handling of the arguments
     # as a dictionary inside the function.
     @pecan.expose(content_type='application/json')
-    def post(self, **args):
+    def post(self, *args, **kwargs):
         """Delete_series endpoint"""
         # TODO(jwysogla):
         # - handle unknown, missing and optional parameters
@@ -39,10 +41,14 @@ class DeleteSeriesController(base.Base):
         rbac.enforce('admin_delete_metrics', pecan.request.headers,
                      pecan.request.enforcer, target)
 
+        if len(args) != 0:
+            pecan.response.status = 404
+            return json.dumps("page not found")
+
         self.create_prometheus_client(pecan.request.cfg)
-        matches = args.get('match[]', [])
-        start = args.get('start', None)
-        end = args.get('end', None)
+        matches = kwargs.get('match[]', [])
+        start = kwargs.get('start', None)
+        end = kwargs.get('end', None)
         try:
             self.prometheus_post("admin/tsdb/delete_series",
                                  {"match[]": matches,
