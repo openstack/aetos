@@ -6,3 +6,15 @@
       # TODO(tkajinm): Enable this once ready
       #- release-notes-jobs-python3
       - check-requirements
+    check:
+      jobs:
+        - telemetry-dsvm-integration-aetos:
+            voting: True
+        - telemetry-dsvm-integration-aetos-ipv6-only:
+            voting: True
+    gate:
+      jobs:
+        - telemetry-dsvm-integration-aetos:
+            voting: True
+        - telemetry-dsvm-integration-aetos-ipv6-only:
+            voting: True
