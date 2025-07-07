@@ -14,7 +14,6 @@
 # under the License.
 
 import json
-from observabilityclient import rbac as obsc_rbac
 from oslo_log import log
 import pecan
 from webob import exc
@@ -58,25 +57,17 @@ class SeriesController(base.Base):
             return json.dumps("page not found")
 
         matches = kwargs.get('match[]', [])
-        if not isinstance(matches, list):
-            matches = [matches]
         LOG.debug("Unmodified matches received: %s", str(matches))
 
-        modified_matches = matches
-        if not privileged:
-            promQLRbac = obsc_rbac.PromQLRbac(
-                self.prometheus_client,
-                target['project_id']
-            )
-            modified_matches = []
-            for match in matches:
-                modified_matches.append(promQLRbac.modify_query(match))
+        processed_matches = self.process_matches(
+            matches, privileged, target['project_id']
+        )
 
-        LOG.debug("Matches sent to prometheus: %s", str(modified_matches))
+        LOG.debug("Matches sent to prometheus: %s", str(processed_matches))
 
         try:
             result = self.prometheus_get("series",
-                                         {'match[]': modified_matches})
+                                         {'match[]': processed_matches})
         except wsme_exc.ClientSideError as e:
             # NOTE(jwysogla): We need a special handling of the exceptions,
             # because we don't use wsexpose as with most of other endpoints.
