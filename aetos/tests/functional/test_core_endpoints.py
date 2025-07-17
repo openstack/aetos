@@ -116,6 +116,8 @@ class TestCoreEndpointsForbidden(base.TestCase):
 
 class TestCoreEndpointsAsUser(base.TestCase):
     def test_label(self):
+        self.CONF.set_override(
+            'project_label_name', 'some_other_label', group='prometheus')
         expected_status_code = 200
         returned_from_prometheus = {
             "status": "success",
@@ -126,7 +128,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
             }
 
         label_name = 'job'
-        expected_match = f"{{project='{self.project_id}'}}"
+        expected_match = f"{{some_other_label='{self.project_id}'}}"
         expected_params = {'match[]': expected_match}
 
         with (
@@ -134,7 +136,10 @@ class TestCoreEndpointsAsUser(base.TestCase):
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'append_rbac_labels',
-                              return_value=expected_match) as rbac_mock
+                              return_value=expected_match) as rbac_mock,
+            mock.patch.object(rbac.PromQLRbac, '__init__',
+                              return_value=None
+                              ) as rbac_init_mock
             ):
             result = self.get_json(f'/label/{label_name}/values', {},
                                    headers=self.reader_auth_headers,
@@ -146,6 +151,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
             f'label/{label_name}/values', expected_params
         )
         rbac_mock.assert_called_once_with('')
+        rbac_init_mock.assert_called_once()
+        self.assertEqual('some_other_label', rbac_init_mock.call_args.args[2])
 
     def test_label_with_matches(self):
         expected_status_code = 200
@@ -189,6 +196,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
             rbac_mock.assert_any_call(match, metric_names=['metric_name'])
 
     def test_labels(self):
+        self.CONF.set_override(
+            'project_label_name', 'some_other_label', group='prometheus')
         expected_status_code = 200
         returned_from_prometheus = {
             "status": "success",
@@ -200,7 +209,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
                 ]
             }
 
-        expected_match = f"{{project='{self.project_id}'}}"
+        expected_match = f"{{some_other_label='{self.project_id}'}}"
         expected_params = {'match[]': expected_match}
 
         with (
@@ -208,7 +217,10 @@ class TestCoreEndpointsAsUser(base.TestCase):
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'append_rbac_labels',
-                              return_value=expected_match) as rbac_mock
+                              return_value=expected_match) as rbac_mock,
+            mock.patch.object(rbac.PromQLRbac, '__init__',
+                              return_value=None
+                              ) as rbac_init_mock
             ):
             result = self.get_json('/labels', {},
                                    headers=self.reader_auth_headers,
@@ -220,6 +232,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
             'labels', expected_params
         )
         rbac_mock.assert_called_once_with('')
+        rbac_init_mock.assert_called_once()
+        self.assertEqual('some_other_label', rbac_init_mock.call_args.args[2])
 
     def test_labels_with_matches(self):
         expected_status_code = 200
@@ -265,6 +279,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
             rbac_mock.assert_any_call(match, metric_names=['metric_name'])
 
     def test_query(self):
+        self.CONF.set_override(
+            'project_label_name', 'some_other_label', group='prometheus')
         expected_status_code = 200
         returned_from_prometheus = {
             "status": "success",
@@ -278,7 +294,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
                             "image": "828ab616-8904-48fb-a4bb-d037473cee7d",
                             "instance": "localhost:3000",
                             "job": "sg-core",
-                            "project": "2dd8edd6c8c24f49bf04670534f6b357",
+                            "some_other_label":
+                                "2dd8edd6c8c24f49bf04670534f6b357",
                             "publisher": "localhost.localdomain",
                             "resource": "828ab616-8904-48fb-a4bb-d037473cee7d",
                             "resource_name": "cirros-0.6.2-x86_64-disk",
@@ -296,7 +313,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
 
         query_string = 'ceilometer_image_size'
         modified_query_string = \
-            f'ceilometer_image_size{{project={self.project_id}}}'
+            f'ceilometer_image_size{{some_other_label={self.project_id}}}'
         params = {'query': query_string}
         modified_params = {'query': modified_query_string}
 
@@ -305,7 +322,10 @@ class TestCoreEndpointsAsUser(base.TestCase):
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'modify_query',
-                              return_value=modified_query_string) as rbac_mock
+                              return_value=modified_query_string) as rbac_mock,
+            mock.patch.object(rbac.PromQLRbac, '__init__',
+                              return_value=None
+                              ) as rbac_init_mock
             ):
             result = self.get_json('/query', **params,
                                    headers=self.reader_auth_headers,
@@ -315,8 +335,12 @@ class TestCoreEndpointsAsUser(base.TestCase):
         self.assertEqual(expected_status_code, result.status_code)
         get_mock.assert_called_once_with('query', modified_params)
         rbac_mock.assert_called_once_with(query_string)
+        rbac_init_mock.assert_called_once()
+        self.assertEqual('some_other_label', rbac_init_mock.call_args.args[2])
 
     def test_series(self):
+        self.CONF.set_override(
+            'project_label_name', 'some_other_label', group='prometheus')
         expected_status_code = 200
         returned_from_prometheus = {
             "status": "success",
@@ -327,7 +351,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
                     "image": "18f639e4-3d0c-447c-a81f-d00db66e63f3",
                     "instance": "localhost:3000",
                     "job": "sg-core",
-                    "project": "7b8e1f013ad240fabe4ff2a4f44345fd",
+                    "some_other_label": "7b8e1f013ad240fabe4ff2a4f44345fd",
                     "publisher": "localhost.localdomain",
                     "resource": "18f639e4-3d0c-447c-a81f-d00db66e63f3",
                     "resource_name": "tempest-scenario-img--2041421357",
@@ -339,8 +363,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
 
         matches = ['ceilometer_image_size', '{resource="volume.size"}']
         modified_matches = [
-            f'ceilometer_image_size{{project={self.project_id}}}',
-            f'{{project={self.project_id}, resource="volume.size"}}'
+            f'ceilometer_image_size{{some_other_label={self.project_id}}}',
+            f'{{some_other_label={self.project_id}, resource="volume.size"}}'
         ]
         params = {'match[]': matches}
         modified_params = {'match[]': modified_matches}
@@ -354,7 +378,10 @@ class TestCoreEndpointsAsUser(base.TestCase):
             mock.patch.object(rbac.PromQLRbac, 'modify_query',
                               side_effect=lambda x, metric_names:
                               modified_matches[matches.index(x)]
-                              ) as rbac_mock
+                              ) as rbac_mock,
+            mock.patch.object(rbac.PromQLRbac, '__init__',
+                              return_value=None
+                              ) as rbac_init_mock
             ):
             result = self.get_json('/series', **params,
                                    headers=self.reader_auth_headers,
@@ -365,6 +392,8 @@ class TestCoreEndpointsAsUser(base.TestCase):
         get_mock.assert_called_once_with('series', modified_params)
         for match in matches:
             rbac_mock.assert_any_call(match, metric_names=['metric_name'])
+        rbac_init_mock.assert_called_once()
+        self.assertEqual('some_other_label', rbac_init_mock.call_args.args[2])
 
     def test_status(self):
         expected_status_code = 403
@@ -390,6 +419,45 @@ class TestCoreEndpointsAsUser(base.TestCase):
         self.assertEqual(expected_status_code, result.status_code)
         self.assertEqual(expected_fault_string,
                          result.json['error_message']['faultstring'])
+
+    def test_project_label_name_default(self):
+        expected_status_code = 200
+        returned_from_prometheus = {
+            "status": "success",
+            "data": [
+                {
+                    "__name__": "ceilometer_image_size",
+                    "counter": "image.size",
+                    "image": "18f639e4-3d0c-447c-a81f-d00db66e63f3",
+                    "instance": "localhost:3000",
+                    "job": "sg-core",
+                    "project": "7b8e1f013ad240fabe4ff2a4f44345fd",
+                    "publisher": "localhost.localdomain",
+                    "resource": "18f639e4-3d0c-447c-a81f-d00db66e63f3",
+                    "resource_name": "tempest-scenario-img--2041421357",
+                    "type": "size",
+                    "unit": "B"
+                    }
+                ]
+            }
+
+        matches = ['ceilometer_image_size', '{resource="volume.size"}']
+        params = {'match[]': matches}
+
+        with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                              return_value=returned_from_prometheus
+                              ),
+            mock.patch.object(rbac.PromQLRbac, 'modify_query'),
+            mock.patch.object(rbac.PromQLRbac, '__init__',
+                              return_value=None
+                              ) as rbac_init_mock
+            ):
+            self.get_json('/series', **params,
+                          headers=self.reader_auth_headers,
+                          status=expected_status_code)
+        rbac_init_mock.assert_called_once()
+        self.assertEqual('project', rbac_init_mock.call_args.args[2])
 
 
 class TestCoreEndpointsAsAdmin(base.TestCase):

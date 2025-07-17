@@ -44,6 +44,13 @@ PROMETHEUS_OPTS = [
         'use_tls',
         default=False,
         help="Whether TLS should be used when connecting to Prometheus."
+        ),
+    cfg.StrOpt(
+        'project_label_name',
+        default="project",
+        help="Label name used to store project IDs in Prometheus. "
+             "This will be used for distinguishing between projects "
+             "for multi-tenancy reasons."
         )
 ]
 
@@ -79,7 +86,7 @@ class Base(rest.RestController):
 
         super(object, self).__init__()
 
-    def process_matches(self, matches, privileged, project_id):
+    def process_matches(self, matches, privileged, project_id, conf):
         # Ensure matches is always a list
         if not isinstance(matches, list):
             matches = [matches]
@@ -88,7 +95,9 @@ class Base(rest.RestController):
         if privileged:
             return matches
 
-        promQLRbac = obsc_rbac.PromQLRbac(self.prometheus_client, project_id)
+        promQLRbac = obsc_rbac.PromQLRbac(
+            self.prometheus_client, project_id,
+            conf.prometheus.project_label_name)
 
         if matches == []:
             return promQLRbac.append_rbac_labels('')

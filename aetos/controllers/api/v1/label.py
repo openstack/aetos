@@ -60,7 +60,7 @@ class LabelController(base.Base):
         LOG.debug("Label name: %s", name)
 
         processed_matches = self.process_matches(
-            matches, privileged, target['project_id']
+            matches, privileged, target['project_id'], pecan.request.cfg
         )
 
         LOG.debug("Matches sent to prometheus: %s", str(processed_matches))
