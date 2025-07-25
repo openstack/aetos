@@ -31,8 +31,8 @@ function _aetos_create_accounts {
 
         create_service_user "aetos" "admin"
 
-        get_or_create_service "aetos" "prometheus" "OpenStack Aetos Service"
-        get_or_create_endpoint 'prometheus' "$REGION_NAME" "$(aetos_service_url)"
+        get_or_create_service "aetos" "metric-storage" "OpenStack Aetos Service"
+        get_or_create_endpoint 'metric-storage' "$REGION_NAME" "$(aetos_service_url)"
     fi
 }
 

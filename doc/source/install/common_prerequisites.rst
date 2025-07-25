@@ -46,7 +46,7 @@ you must create service credentials, and API endpoints.
 
      .. code-block:: console
 
-        $ openstack service create --name aetos --description "OpenStack Aetos Service" prometheus
+        $ openstack service create --name aetos --description "OpenStack Aetos Service" metric-storage
         +-------------+----------------------------------+
         | Field       | Value                            |
         +-------------+----------------------------------+
@@ -54,7 +54,7 @@ you must create service credentials, and API endpoints.
         | enabled     | True                             |
         | id          | 3405453b14da441ebb258edfeba96d83 |
         | name        | aetos                            |
-        | type        | prometheus                       |
+        | type        | metric-storage                   |
         +-------------+----------------------------------+
 
 #. Create the aetos service API endpoints:
@@ -62,7 +62,7 @@ you must create service credentials, and API endpoints.
    .. code-block:: console
 
       $ openstack endpoint create --region RegionOne \
-        prometheus public http://controller/prometheus
+        metric-storage public http://controller/prometheus
         +--------------+-----------------------------------+
         | Field        | Value                             |
         +--------------+-----------------------------------+
@@ -73,11 +73,11 @@ you must create service credentials, and API endpoints.
         | region_id    | RegionOne                         |
         | service_id   | 3405453b14da441ebb258edfeba96d83  |
         | service_name | aetos                             |
-        | service_type | prometheus                        |
+        | service_type | metric-storage                    |
         | url          | http://controller/prometheus      |
         +--------------+-----------------------------------+
       $ openstack endpoint create --region RegionOne \
-        prometheus internal http://controller/prometheus
+        metric-storage internal http://controller/prometheus
         +--------------+-----------------------------------+
         | Field        | Value                             |
         +--------------+-----------------------------------+
@@ -88,11 +88,11 @@ you must create service credentials, and API endpoints.
         | region_id    | RegionOne                         |
         | service_id   | 3405453b14da441ebb258edfeba96d83  |
         | service_name | aetos                             |
-        | service_type | prometheus                        |
+        | service_type | metric-storage                    |
         | url          | http://controller/prometheus      |
         +--------------+-----------------------------------+
       $ openstack endpoint create --region RegionOne \
-        prometheus admin http://controller/prometheus
+        metric-storage admin http://controller/prometheus
         +--------------+-----------------------------------+
         | Field        | Value                             |
         +--------------+-----------------------------------+
@@ -103,6 +103,6 @@ you must create service credentials, and API endpoints.
         | region_id    | RegionOne                         |
         | service_id   | 3405453b14da441ebb258edfeba96d83  |
         | service_name | aetos                             |
-        | service_type | prometheus                        |
+        | service_type | metric-storage                    |
         | url          | http://controller/prometheus      |
         +--------------+-----------------------------------+
