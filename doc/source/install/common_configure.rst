@@ -1,13 +1,13 @@
 2. Edit the ``/etc/aetos/aetos.conf`` file and complete the following
    actions:
 
-   * In the ``[DEFAULT]`` section, configure prometheus access:
+   * In the ``[prometheus]`` section, configure prometheus access:
 
      .. code-block:: ini
 
-        [DEFAULT]
-        prometheus_host=localhost
-        prometheus_port=9090
+        [prometheus]
+        host=localhost
+        port=9090
 
    * In the ``[DEFAULT]`` and ``[keystone_authtoken]`` sections,
      configure Identity service access:

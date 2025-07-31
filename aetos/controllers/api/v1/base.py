@@ -19,19 +19,32 @@ from wsme import exc
 from observabilityclient import prometheus_client
 from observabilityclient import rbac as obsc_rbac
 from oslo_config import cfg
+from oslo_log import log
 from oslo_utils import netutils
 
+LOG = log.getLogger(__name__)
 
-OPTS = [
+
+PROMETHEUS_OPTS = [
     cfg.StrOpt(
-        'prometheus_host',
+        'host',
         default="localhost",
         help="The host of Prometheus"),
     cfg.PortOpt(
-        'prometheus_port',
+        'port',
         default=9090,
         help="The port of Prometheus"),
-    # TODO(jwysogla): TLS Prometheus options
+    cfg.StrOpt(
+        'ca_file',
+        help="Path to a CA cert for establishing TLS connections to "
+             "Prometheus. This is optional, if this isn't set, then "
+             "default system CA certificates will be used."
+        ),
+    cfg.BoolOpt(
+        'use_tls',
+        default=False,
+        help="Whether TLS should be used when connecting to Prometheus."
+        )
 ]
 
 
@@ -42,11 +55,28 @@ class ServerSideError(exc.ClientSideError):
 
 class Base(rest.RestController):
     def create_prometheus_client(self, conf):
-        # TODO(jwysogla): Handle TLS
-        prometheus_host = netutils.escape_ipv6(conf.prometheus_host)
-        prometheus_port = conf.prometheus_port
-        url = f"{prometheus_host}:{prometheus_port}"
+        host = netutils.escape_ipv6(conf.prometheus.host)
+        port = conf.prometheus.port
+        ca_file = conf.prometheus.ca_file
+        use_tls = conf.prometheus.use_tls
+
+        if ca_file and not use_tls:
+            LOG.warning("CA file specified but TLS disabled - "
+                        "CA file will be ignored")
+
+        url = f"{host}:{port}"
         self.prometheus_client = prometheus_client.PrometheusAPIClient(url)
+
+        if use_tls:
+            if ca_file:
+                LOG.debug("TLS for Prometheus connection enabled with CA "
+                          "file: %s", ca_file)
+                self.prometheus_client.set_ca_cert(ca_file)
+            else:
+                LOG.debug("TLS for Prometheus connection enabled with system "
+                          "default CA certificates")
+                self.prometheus_client.set_ca_cert(True)
+
         super(object, self).__init__()
 
     def process_matches(self, matches, privileged, project_id):

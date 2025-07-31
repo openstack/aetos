@@ -36,6 +36,7 @@ OPTS = [
 def list_opts():
     return [
         ('DEFAULT',
-         itertools.chain(OPTS,
-                         aetos.controllers.api.v1.base.OPTS)),
+         itertools.chain(OPTS)),
+        ('prometheus',
+         itertools.chain(aetos.controllers.api.v1.base.PROMETHEUS_OPTS)),
     ]
