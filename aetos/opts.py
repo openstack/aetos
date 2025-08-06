@@ -29,7 +29,8 @@ OPTS = [
     cfg.StrOpt(
         'auth_mode',
         default="keystone",
-        help="Authentication mode to use. Unset to disable authentication"),
+        choices=('noauth', 'keystone'),
+        help="Authentication mode to use."),
 ]
 
 
