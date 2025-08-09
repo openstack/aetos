@@ -13,8 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
-import tempfile
 from unittest import mock
 
 from oslo_config import fixture as fixture_config
@@ -39,36 +37,23 @@ class TestBaseController(test_base.TestCase):
             self.controller.create_prometheus_client(self.conf)
 
             mock_client.assert_called_once_with('localhost:9090')
-            # Verify set_ca_cert was not called
             mock_client.return_value.set_ca_cert.assert_not_called()
+            mock_client.return_value.set_client_cert.assert_not_called()
 
     def test_create_prometheus_client_with_tls_custom_ca(self):
         """Test prometheus client creation with TLS with custom CA"""
-        # Create a temporary CA file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.pem',
-                                         delete=False) as f:
-            cert_content = ("-----BEGIN CERTIFICATE-----\n"
-                            "test_ca_content\n"
-                            "-----END CERTIFICATE-----")
-            f.write(cert_content)
-            ca_file_path = f.name
+        self.conf.set_override('ca_file', 'cafile', group='prometheus')
+        self.conf.set_override('use_tls', True, group='prometheus')
 
-        try:
-            self.conf.set_override('ca_file', ca_file_path, group='prometheus')
-            self.conf.set_override('use_tls', True, group='prometheus')
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
 
-            with mock.patch(
-                'observabilityclient.prometheus_client.PrometheusAPIClient'
-            ) as mock_client:
-                self.controller.create_prometheus_client(self.conf)
-
-                mock_client.assert_called_once_with('localhost:9090')
-
-                # Verify set_ca_cert was called with the correct file path
-                mock_client.return_value.set_ca_cert.assert_called_once_with(
-                    ca_file_path)
-        finally:
-            os.unlink(ca_file_path)
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_called_once_with(
+                'cafile')
+            mock_client.return_value.set_client_cert.assert_not_called()
 
     def test_create_prometheus_client_with_tls_default_ca(self):
         """Test prometheus client creation with TLS with default CA"""
@@ -80,6 +65,75 @@ class TestBaseController(test_base.TestCase):
             self.controller.create_prometheus_client(self.conf)
 
             mock_client.assert_called_once_with('localhost:9090')
-
-            # Verify set_ca_cert was called with True
             mock_client.return_value.set_ca_cert.assert_called_once_with(True)
+            mock_client.return_value.set_client_cert.assert_not_called()
+
+    def test_create_prometheus_client_without_tls_with_ca(self):
+        """Test prometheus client creation without TLS but with CA"""
+        self.conf.set_override('ca_file', 'cafile', group='prometheus')
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_not_called()
+            mock_client.return_value.set_client_cert.assert_not_called()
+
+    def test_create_prometheus_client_with_tls_with_cert_and_key(self):
+        """Test prometheus client creation with TLS with cert/key file"""
+        self.conf.set_override('use_tls', True, group='prometheus')
+        self.conf.set_override('cert_file', 'certfile', group='prometheus')
+        self.conf.set_override('key_file', 'keyfile', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_called_once_with(True)
+            mock_client.return_value.set_client_cert.assert_called_once_with(
+                'certfile', 'keyfile')
+
+    def test_create_prometheus_client_without_tls_with_cert_and_key(self):
+        """Test prometheus client creation without TLS with cert/key file"""
+        self.conf.set_override('cert_file', 'certfile', group='prometheus')
+        self.conf.set_override('key_file', 'keyfile', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_not_called()
+            mock_client.return_value.set_client_cert.assert_not_called()
+
+    def test_create_prometheus_client_with_tls_with_cert_only(self):
+        """Test prometheus client creation with TLS with only cert file"""
+        self.conf.set_override('use_tls', True, group='prometheus')
+        self.conf.set_override('key_file', 'keyfile', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_called_once_with(True)
+            mock_client.return_value.set_client_cert.assert_not_called()
+
+    def test_create_prometheus_client_with_tls_with_key_only(self):
+        """Test prometheus client creation with TLS with only ket file"""
+        self.conf.set_override('use_tls', True, group='prometheus')
+        self.conf.set_override('key_file', 'keyfile', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.assert_called_once_with('localhost:9090')
+            mock_client.return_value.set_ca_cert.assert_called_once_with(True)
+            mock_client.return_value.set_client_cert.assert_not_called()
