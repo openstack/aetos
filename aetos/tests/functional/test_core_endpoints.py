@@ -166,11 +166,13 @@ class TestCoreEndpointsAsUser(base.TestCase):
         expected_params = {'match[]': expected_matches}
 
         with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient,
+                              'label_values', return_value=['metric_name']),
             mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'modify_query',
-                              side_effect=lambda x:
+                              side_effect=lambda x, metric_names:
                               expected_matches[matches.index(x)]
                               ) as rbac_mock
             ):
@@ -184,7 +186,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
             f'label/{label_name}/values', expected_params
         )
         for match in matches:
-            rbac_mock.assert_any_call(match)
+            rbac_mock.assert_any_call(match, metric_names=['metric_name'])
 
     def test_labels(self):
         expected_status_code = 200
@@ -240,11 +242,13 @@ class TestCoreEndpointsAsUser(base.TestCase):
         expected_params = {'match[]': expected_matches}
 
         with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient,
+                              'label_values', return_value=['metric_name']),
             mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'modify_query',
-                              side_effect=lambda x:
+                              side_effect=lambda x, metric_names:
                               expected_matches[matches.index(x)]
                               ) as rbac_mock
             ):
@@ -258,7 +262,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
             'labels', expected_params
         )
         for match in matches:
-            rbac_mock.assert_any_call(match)
+            rbac_mock.assert_any_call(match, metric_names=['metric_name'])
 
     def test_query(self):
         expected_status_code = 200
@@ -342,11 +346,13 @@ class TestCoreEndpointsAsUser(base.TestCase):
         modified_params = {'match[]': modified_matches}
 
         with (
+            mock.patch.object(prometheus_client.PrometheusAPIClient,
+                              'label_values', return_value=['metric_name']),
             mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                               return_value=returned_from_prometheus
                               ) as get_mock,
             mock.patch.object(rbac.PromQLRbac, 'modify_query',
-                              side_effect=lambda x:
+                              side_effect=lambda x, metric_names:
                               modified_matches[matches.index(x)]
                               ) as rbac_mock
             ):
@@ -358,7 +364,7 @@ class TestCoreEndpointsAsUser(base.TestCase):
         self.assertEqual(expected_status_code, result.status_code)
         get_mock.assert_called_once_with('series', modified_params)
         for match in matches:
-            rbac_mock.assert_any_call(match)
+            rbac_mock.assert_any_call(match, metric_names=['metric_name'])
 
     def test_status(self):
         expected_status_code = 403

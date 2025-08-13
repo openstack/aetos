@@ -94,9 +94,11 @@ class Base(rest.RestController):
             return promQLRbac.append_rbac_labels('')
 
         # Apply RBAC modification to each match
+        metric_names = self.prometheus_client.label_values("__name__")
         modified_matches = []
         for match in matches:
-            modified_matches.append(promQLRbac.modify_query(match))
+            modified_matches.append(
+                promQLRbac.modify_query(match, metric_names=metric_names))
 
         return modified_matches
 
