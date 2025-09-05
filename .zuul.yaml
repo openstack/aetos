@@ -8,12 +8,14 @@
       - check-requirements
     check:
       jobs:
+        - watcher-aetos-integration
         - telemetry-dsvm-integration-aetos:
             voting: True
         - telemetry-dsvm-integration-aetos-ipv6-only:
             voting: True
     gate:
       jobs:
+        - watcher-aetos-integration
         - telemetry-dsvm-integration-aetos:
             voting: True
         - telemetry-dsvm-integration-aetos-ipv6-only:
