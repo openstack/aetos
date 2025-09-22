@@ -54,7 +54,8 @@ class QueryController(base.Base):
         else:
             promQLRbac = obsc_rbac.PromQLRbac(
                 self.prometheus_client,
-                target['project_id']
+                target['project_id'],
+                pecan.request.cfg.prometheus.project_label_name
             )
             modified_query = promQLRbac.modify_query(query)
 

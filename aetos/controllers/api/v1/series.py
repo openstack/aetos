@@ -60,7 +60,7 @@ class SeriesController(base.Base):
         LOG.debug("Unmodified matches received: %s", str(matches))
 
         processed_matches = self.process_matches(
-            matches, privileged, target['project_id']
+            matches, privileged, target['project_id'], pecan.request.cfg
         )
 
         LOG.debug("Matches sent to prometheus: %s", str(processed_matches))
