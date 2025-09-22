@@ -35,6 +35,16 @@ PROMETHEUS_OPTS = [
         default=9090,
         help="The port of Prometheus"),
     cfg.StrOpt(
+        'cert_file',
+        help="Path to a client cert for establishing TLS connections to "
+             "Prometheus."
+        ),
+    cfg.StrOpt(
+        'key_file',
+        help="Path to a client key for establishing TLS connections to "
+             "Prometheus."
+        ),
+    cfg.StrOpt(
         'ca_file',
         help="Path to a CA cert for establishing TLS connections to "
              "Prometheus. This is optional, if this isn't set, then "
@@ -57,12 +67,14 @@ class Base(rest.RestController):
     def create_prometheus_client(self, conf):
         host = netutils.escape_ipv6(conf.prometheus.host)
         port = conf.prometheus.port
+        cert_file = conf.prometheus.cert_file
+        key_file = conf.prometheus.key_file
         ca_file = conf.prometheus.ca_file
         use_tls = conf.prometheus.use_tls
 
-        if ca_file and not use_tls:
-            LOG.warning("CA file specified but TLS disabled - "
-                        "CA file will be ignored")
+        if (ca_file or key_file or cert_file) and not use_tls:
+            LOG.warning("CA/Cert/Key file specified but TLS disabled - "
+                        "Ca/Cert/Key file will be ignored")
 
         url = f"{host}:{port}"
         self.prometheus_client = prometheus_client.PrometheusAPIClient(url)
@@ -76,6 +88,12 @@ class Base(rest.RestController):
                 LOG.debug("TLS for Prometheus connection enabled with system "
                           "default CA certificates")
                 self.prometheus_client.set_ca_cert(True)
+
+            if cert_file and key_file:
+                self.prometheus_client.set_client_cert(cert_file, key_file)
+            elif cert_file or key_file:
+                LOG.warning("Only one of cert_file and key_file is set. "
+                            "Set the two options or both are ignored.")
 
         super(object, self).__init__()
 
