@@ -68,13 +68,11 @@ function init_aetos {
 function install_aetos {
     setup_develop $AETOS_DIR $AETOS_BACKEND
     sudo install -d -o $STACK_USER -m 755 $AETOS_CONF_DIR
-
-    pip_install uwsgi
 }
 
 # start_aetos() - Start running processes, including screen
 function start_aetos {
-    run_process aetos "$AETOS_BIN_DIR/uwsgi --ini $AETOS_UWSGI_CONF"
+    run_process aetos "$(which uwsgi) --ini $AETOS_UWSGI_CONF"
 }
 
 # configure_tempest_for_aetos()
