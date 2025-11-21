@@ -1,6 +1,10 @@
-===============================
+=====
 Aetos
-===============================
+=====
+
+.. image:: https://governance.openstack.org/tc/badges/aetos.svg
+
+.. Change things from this point on
 
 --------
 Overview
