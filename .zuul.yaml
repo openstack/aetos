@@ -3,8 +3,7 @@
     templates:
       - openstack-python3-jobs
       - publish-openstack-docs-pti
-      # TODO(tkajinm): Enable this once ready
-      #- release-notes-jobs-python3
+      - release-notes-jobs-python3
       - check-requirements
     check:
       jobs:
