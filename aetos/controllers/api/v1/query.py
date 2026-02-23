@@ -27,8 +27,8 @@ LOG = log.getLogger(__name__)
 
 
 class QueryController(base.Base):
-    @wsme_pecan.wsexpose(wtypes.text, wtypes.text)
-    def get(self, query):
+    @wsme_pecan.wsexpose(wtypes.text, wtypes.text, wtypes.text, wtypes.text)
+    def get(self, query, time=None, timeout=None):
         """Query endpoint"""
         target = {"project_id": pecan.request.headers.get('X-Project-Id')}
         try:
@@ -62,7 +62,8 @@ class QueryController(base.Base):
         LOG.debug("Unmodified query: %s", query)
         LOG.debug("Query sent to prometheus: %s", modified_query)
 
-        result = self.prometheus_get("query", {"query": modified_query})
+        params = {"query": modified_query, "time": time, "timeout": timeout}
+        result = self.prometheus_get("query", params)
 
         LOG.debug("Data received from prometheus: %s", str(result))
         return result

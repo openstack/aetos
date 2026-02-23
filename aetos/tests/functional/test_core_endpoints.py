@@ -314,8 +314,16 @@ class TestCoreEndpointsAsUser(base.TestCase):
         query_string = 'ceilometer_image_size'
         modified_query_string = \
             f'ceilometer_image_size{{some_other_label={self.project_id}}}'
-        params = {'query': query_string}
-        modified_params = {'query': modified_query_string}
+        params = {
+            'query': query_string,
+            'time': '2026-02-23T13:20:05+00:00',
+            'timeout': '200'
+        }
+        modified_params = {
+            'query': modified_query_string,
+            'time': '2026-02-23T13:20:05+00:00',
+            'timeout': '200'
+        }
 
         with (
             mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
@@ -544,6 +552,11 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
 
         query_string = 'ceilometer_image_size'
         params = {'query': query_string}
+        expected_params = {
+            'query': query_string,
+            'time': None,
+            'timeout': None
+        }
 
         with (
             mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
@@ -557,7 +570,7 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
 
         self.assertEqual(returned_from_prometheus, result.json)
         self.assertEqual(expected_status_code, result.status_code)
-        get_mock.assert_called_once_with('query', params)
+        get_mock.assert_called_once_with('query', expected_params)
         rbac_mock.assert_not_called()
 
     def test_series(self):
