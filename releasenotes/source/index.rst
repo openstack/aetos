@@ -6,4 +6,5 @@
    :maxdepth: 1
 
    unreleased
+   2026.1
    2025.2
