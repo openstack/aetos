@@ -1,10 +1,10 @@
-=========================
+==========================
 Enabling Aetos in DevStack
-=========================
+==========================
 
 1. Download DevStack::
 
-    git clone https://opendev.org/openstack/devstack.git
+    git clone https://opendev.org/openstack/devstack
     cd devstack
 
 2. Add this repo as an external repository in ``local.conf`` file::
@@ -12,10 +12,14 @@ Enabling Aetos in DevStack
     [[local|localrc]]
     enable_plugin aetos https://opendev.org/openstack/aetos
 
-   To use stable branches, make sure devstack is on that branch, and specify
-   the branch name to enable_plugin, for example::
+   To use stable branches, make sure DevStack is on that branch, and specify
+   the branch name to enable_plugin, for example (2026.1 Gazpacho)::
 
-    enable_plugin aetos https://opendev.org/openstack/aetos stable/2025.1
+    enable_plugin aetos https://opendev.org/openstack/aetos stable/2026.1
+
+   To use development branch:
+
+    enable_plugin aetos https://opendev.org/openstack/aetos master
 
    There are some options, defined in
    ``aetos/devstack/settings``, they can be used to configure the installation
