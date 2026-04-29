@@ -8,6 +8,7 @@
     check:
       jobs:
         - watcher-tempest-aetos
+        - cloudkitty-tempest-full-v2-collector-aetos
         - telemetry-dsvm-integration-aetos:
             voting: True
         - telemetry-dsvm-integration-aetos-ipv6-only:
@@ -15,6 +16,7 @@
     gate:
       jobs:
         - watcher-tempest-aetos
+        - cloudkitty-tempest-full-v2-collector-aetos
         - telemetry-dsvm-integration-aetos:
             voting: True
         - telemetry-dsvm-integration-aetos-ipv6-only:
