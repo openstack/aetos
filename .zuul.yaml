@@ -7,17 +7,31 @@
       - check-requirements
     check:
       jobs:
-        - watcher-tempest-aetos
-        - cloudkitty-tempest-full-v2-collector-aetos
+        - watcher-tempest-aetos:
+            irrelevant-files: &irrelevant_files
+              - ^\.gitignore$
+              - ^\.gitreview$
+              - ^\.pre-commit-config\.yaml$
+              - ^test-requirements.txt$
+              - ^doc/.*$
+              - ^etc/.*$
+              - ^.*\.rst$
+              - ^releasenotes/.*$
+              - ^aetos/tests/.*$
+              - ^tox\.ini$
+        - cloudkitty-tempest-full-v2-collector-aetos:
+            irrelevant-files: *irrelevant_files
         - telemetry-dsvm-integration-aetos:
-            voting: True
+            irrelevant-files: *irrelevant_files
         - telemetry-dsvm-integration-aetos-ipv6-only:
-            voting: True
+            irrelevant-files: *irrelevant_files
     gate:
       jobs:
-        - watcher-tempest-aetos
-        - cloudkitty-tempest-full-v2-collector-aetos
+        - watcher-tempest-aetos:
+            irrelevant-files: *irrelevant_files
+        - cloudkitty-tempest-full-v2-collector-aetos:
+            irrelevant-files: *irrelevant_files
         - telemetry-dsvm-integration-aetos:
-            voting: True
+            irrelevant-files: *irrelevant_files
         - telemetry-dsvm-integration-aetos-ipv6-only:
-            voting: True
+            irrelevant-files: *irrelevant_files
