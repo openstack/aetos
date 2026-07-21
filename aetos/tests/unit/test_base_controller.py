@@ -137,3 +137,65 @@ class TestBaseController(test_base.TestCase):
             mock_client.assert_called_once_with('localhost:9090')
             mock_client.return_value.set_ca_cert.assert_called_once_with(True)
             mock_client.return_value.set_client_cert.assert_not_called()
+
+    def test_create_prometheus_client_with_basic_auth_and_tls(self):
+        """Basic auth with TLS enabled calls set_basic_auth, no warning"""
+        self.conf.set_override('use_tls', True, group='prometheus')
+        self.conf.set_override('username', 'user', group='prometheus')
+        self.conf.set_override('password', 'pass', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client, mock.patch.object(base, 'LOG') as mock_log:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.return_value.set_basic_auth.assert_called_once_with(
+                'user', 'pass')
+            mock_log.warning.assert_not_called()
+
+    def test_create_prometheus_client_with_basic_auth_without_tls(self):
+        """Basic auth without TLS still sets auth but warns about plaintext"""
+        self.conf.set_override('username', 'user', group='prometheus')
+        self.conf.set_override('password', 'pass', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client, mock.patch.object(base, 'LOG') as mock_log:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.return_value.set_basic_auth.assert_called_once_with(
+                'user', 'pass')
+            mock_log.warning.assert_called_once()
+
+    def test_create_prometheus_client_with_username_only(self):
+        """Only username set: basic auth not applied, warns"""
+        self.conf.set_override('username', 'user', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client, mock.patch.object(base, 'LOG') as mock_log:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.return_value.set_basic_auth.assert_not_called()
+            mock_log.warning.assert_called_once()
+
+    def test_create_prometheus_client_with_password_only(self):
+        """Only password set: basic auth not applied, warns"""
+        self.conf.set_override('password', 'pass', group='prometheus')
+
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client, mock.patch.object(base, 'LOG') as mock_log:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.return_value.set_basic_auth.assert_not_called()
+            mock_log.warning.assert_called_once()
+
+    def test_create_prometheus_client_without_basic_auth(self):
+        """No credentials: set_basic_auth never called (regression guard)"""
+        with mock.patch(
+            'observabilityclient.prometheus_client.PrometheusAPIClient'
+        ) as mock_client:
+            self.controller.create_prometheus_client(self.conf)
+
+            mock_client.return_value.set_basic_auth.assert_not_called()

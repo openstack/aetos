@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Aetos can now authenticate to Prometheus using HTTP basic
+    authentication. Set the new ``[prometheus] username`` and
+    ``[prometheus] password`` options; basic auth is enabled only when both
+    are set. This is in addition to the existing no-auth and mutual TLS
+    options and can be combined with TLS. If basic auth is configured while
+    ``[prometheus] use_tls`` is ``False``, the credentials are sent over
+    plaintext HTTP and a warning is logged.

@@ -56,6 +56,14 @@ PROMETHEUS_OPTS = [
         help="Whether TLS should be used when connecting to Prometheus."
         ),
     cfg.StrOpt(
+        'username',
+        help="Username for HTTP basic auth against Prometheus. Basic auth "
+             "is enabled only when both username and password are set."),
+    cfg.StrOpt(
+        'password',
+        secret=True,
+        help="Password for HTTP basic auth against Prometheus."),
+    cfg.StrOpt(
         'project_label_name',
         default="project",
         help="Label name used to store project IDs in Prometheus. "
@@ -78,6 +86,8 @@ class Base(rest.RestController):
         key_file = conf.prometheus.key_file
         ca_file = conf.prometheus.ca_file
         use_tls = conf.prometheus.use_tls
+        username = conf.prometheus.username
+        password = conf.prometheus.password
 
         if (ca_file or key_file or cert_file) and not use_tls:
             LOG.warning("CA/Cert/Key file specified but TLS disabled - "
@@ -101,6 +111,16 @@ class Base(rest.RestController):
             elif cert_file or key_file:
                 LOG.warning("Only one of cert_file and key_file is set. "
                             "Set the two options or both are ignored.")
+
+        if username and password:
+            if not use_tls:
+                LOG.warning("Prometheus basic auth is configured but use_tls "
+                            "is False - credentials will be sent over "
+                            "plaintext HTTP.")
+            self.prometheus_client.set_basic_auth(username, password)
+        elif username or password:
+            LOG.warning("Only one of username and password is set. Both are "
+                        "required for basic auth; ignoring.")
 
         super(object, self).__init__()
 
