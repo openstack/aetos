@@ -691,7 +691,7 @@ class TestCoreEndpointsAsAdmin(base.TestCase):
         get_mock.assert_called_once_with('targets', params)
 
 
-class CoreEndpointsErrorCommonTests():
+class CoreEndpointsErrorCommonTests:
     def test_label(self):
         with base.quiet_expected_exception():
             result = self.get_json('/label/name/values',

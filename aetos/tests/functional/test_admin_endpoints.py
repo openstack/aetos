@@ -116,7 +116,7 @@ class TestAdminEndpointsAsAdmin(base.TestCase):
         self.assertEqual(expected_status_code, result.status_code)
 
 
-class AdminEndpointsErrorCommonTests():
+class AdminEndpointsErrorCommonTests:
     def test_delete_series(self):
         params = {"match[]": ["metric_name1", "metric_name2"]}
         with base.quiet_expected_exception():
