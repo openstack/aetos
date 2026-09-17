@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    The WSGI script, ``aetos-api``, has been removed. Deployment tools should
+    use python module paths (``aetos.wsgi.api``). In case the WSGI server
+    doesn't support python module paths, (for example mod_wsgi is known not to
+    support it), create a ``.wsgi`` script::
+
+      import aetos.wsgi.api
+      application = aetos.wsgi.api.application
