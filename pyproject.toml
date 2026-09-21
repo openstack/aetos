@@ -2,6 +2,57 @@
 requires = ["pbr>=6.0.0", "setuptools>=64.0.0"]
 build-backend = "pbr.build"
 
+[project]
+name = "aetos"
+description = "Aetos is a reverse proxy for enforcing openstack multi-tenancy for Prometheus."
+authors = [
+    {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
+]
+readme = {file = "README.rst", content-type = "text/x-rst"}
+license = "Apache-2.0"
+dynamic = ["version", "dependencies"]
+requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: OpenStack",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: System :: Monitoring",
+]
+
+[project.urls]
+Homepage = "https://docs.openstack.org/aetos"
+Repository = "https://opendev.org/openstack/aetos"
+
+[tool.setuptools.packages.find]
+include = ["aetos*"]
+
+[tool.setuptools.data-files]
+"etc/aetos" = [
+    "etc/aetos/*",
+]
+
+[project.entry-points."oslo.config.opts"]
+aetos = "aetos.opts:list_opts"
+
+[project.entry-points."oslo.config.opts.defaults"]
+aetos = "aetos.conf.defaults:set_lib_defaults"
+
+[project.entry-points."oslo.policy.policies"]
+aetos = "aetos.policies:list_rules"
+
+[project.entry-points."oslo.policy.enforcer"]
+aetos = "aetos.policies:get_enforcer"
+
 [tool.autopep8]
 aggressive = 3
 in-place = true
